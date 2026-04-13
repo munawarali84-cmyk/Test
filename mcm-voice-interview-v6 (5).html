@@ -1,0 +1,2029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCM Voice Interview Platform</title>
+<script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+:root{
+  --navy:#0a1628;--navy-mid:#112040;--navy-light:#1a3060;
+  --gold:#c9a84c;--gold-light:#e8c96a;--white:#f8f6f1;
+  --gray:#8a9ab5;--red:#c0392b;--green-light:#27ae60;
+  --surface:#0d1f3c;--border:rgba(201,168,76,.2);--warn:#e67e22;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);min-height:100vh;overflow-x:hidden;user-select:none}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 80% 50% at 10% 20%,rgba(201,168,76,.06) 0%,transparent 60%),
+  linear-gradient(160deg,#0a1628 0%,#0d1f3c 50%,#071020 100%)}
+
+/* HEADER */
+header{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;
+  padding:14px 32px;border-bottom:1px solid var(--border);background:rgba(10,22,40,.9);backdrop-filter:blur(12px)}
+.logo{display:flex;align-items:center;gap:11px}
+.logo-icon{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,var(--gold),var(--gold-light));
+  display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-weight:900;font-size:15px;color:var(--navy)}
+.logo-text strong{display:block;font-family:'Playfair Display',serif;font-size:14px;color:var(--gold)}
+.logo-text span{font-size:9px;color:var(--gray);letter-spacing:1px;text-transform:uppercase}
+.hdr-right{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.ai-badge{display:flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;
+  background:rgba(201,168,76,.1);border:1px solid var(--gold);font-size:10px;color:var(--gold);font-family:'DM Mono',monospace}
+.ai-badge .pulse{width:5px;height:5px;border-radius:50%;background:var(--gold);animation:ai-pulse 1.5s ease-in-out infinite}
+@keyframes ai-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+.hdr-btn{display:flex;align-items:center;gap:5px;padding:4px 11px;border-radius:20px;
+  border:1px solid var(--border);font-size:10px;color:var(--gray);font-family:'DM Mono',monospace;cursor:pointer;transition:all .2s;background:none}
+.hdr-btn:hover{border-color:var(--gold);color:var(--gold-light)}
+.hdr-btn .dot{width:5px;height:5px;border-radius:50%;background:var(--gray)}
+.hdr-btn.on .dot{background:var(--green-light)}
+.hdr-btn.on{border-color:rgba(39,174,96,.3);color:#6fcf97}
+.ac-ind{display:flex;align-items:center;gap:5px;padding:4px 11px;border-radius:20px;
+  font-size:10px;font-family:'DM Mono',monospace;border:1px solid rgba(39,174,96,.3);color:#6fcf97;background:rgba(39,174,96,.06)}
+.ac-ind.warn{border-color:rgba(230,126,34,.5);color:#f39c12;background:rgba(230,126,34,.08)}
+.ac-ind.danger{border-color:rgba(192,57,43,.5);color:#e74c3c;background:rgba(192,57,43,.1)}
+.ac-dot{width:5px;height:5px;border-radius:50%;background:currentColor;animation:ai-pulse 1s ease-in-out infinite}
+
+/* ALERT BANNER */
+.alert-banner{display:none;position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:900;
+  background:rgba(192,57,43,.95);border:1px solid rgba(192,57,43,.8);border-radius:10px;
+  padding:11px 22px;font-size:12px;font-weight:500;backdrop-filter:blur(8px);
+  box-shadow:0 8px 32px rgba(0,0,0,.5);white-space:nowrap;align-items:center;gap:9px}
+.alert-banner.show{display:flex;animation:slideDown .3s ease}
+.alert-banner.warn-col{background:rgba(230,126,34,.95);border-color:rgba(230,126,34,.8)}
+@keyframes slideDown{from{transform:translateX(-50%) translateY(-8px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;z-index:1000;background:rgba(5,12,25,.9);backdrop-filter:blur(8px);align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:30px 34px;width:480px;max-width:95vw;position:relative;max-height:90vh;overflow-y:auto}
+.modal-box h2{font-family:'Playfair Display',serif;font-size:19px;color:var(--gold);margin-bottom:4px}
+.modal-box>p{font-size:12px;color:var(--gray);margin-bottom:18px}
+.modal-x{position:absolute;top:12px;right:16px;background:none;border:none;color:var(--gray);font-size:18px;cursor:pointer}
+.modal-x:hover{color:var(--white)}
+.fg{margin-bottom:13px}
+.fg label{display:block;font-size:10px;color:var(--gold);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:5px;font-family:'DM Mono',monospace}
+.fg input,.fg select{width:100%;padding:8px 11px;background:rgba(255,255,255,.05);border:1px solid var(--border);
+  border-radius:7px;color:var(--white);font-size:12px;font-family:'DM Mono',monospace;outline:none;transition:border-color .2s}
+.fg input:focus,.fg select:focus{border-color:var(--gold)}
+.fg input::placeholder{color:var(--gray)}
+.fg .hint{font-size:10px;color:var(--gray);margin-top:4px}
+.msec{font-size:9px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;font-family:'DM Mono',monospace;
+  margin:16px 0 11px;padding-top:13px;border-top:1px solid var(--border)}
+.modal-acts{display:flex;gap:9px;margin-top:18px}
+.btn-primary{flex:1;padding:10px;background:linear-gradient(135deg,var(--gold),var(--gold-light));color:var(--navy);border:none;border-radius:7px;font-weight:600;font-size:13px;cursor:pointer}
+.btn-primary:hover{opacity:.9}
+.btn-ghost{padding:10px 16px;background:transparent;border:1px solid var(--border);border-radius:7px;color:var(--gray);cursor:pointer;font-size:13px}
+.btn-ghost:hover{color:var(--white);border-color:var(--gray)}
+
+/* LISTENING ROUND */
+.ls-area{display:none}
+.ls-player{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px}
+.ls-player-hdr{font-size:10px;color:var(--gold);letter-spacing:1.2px;text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.ls-play-btn{display:flex;align-items:center;gap:10px;padding:12px 18px;background:rgba(201,168,76,.12);border:1px solid var(--gold);border-radius:9px;cursor:pointer;color:var(--gold);font-size:12px;font-weight:600;transition:all .2s;width:100%;margin-bottom:12px}
+.ls-play-btn:hover{background:rgba(201,168,76,.22)}
+.ls-play-btn .ls-play-ic{font-size:20px}
+.ls-play-btn.playing{background:rgba(192,57,43,.15);border-color:var(--red);color:#e88080}
+.ls-prog{height:4px;background:rgba(255,255,255,.08);border-radius:2px;margin-bottom:8px;overflow:hidden}
+.ls-prog-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light));border-radius:2px;width:0%;transition:width .3s linear}
+.ls-timing{display:flex;justify-content:space-between;font-size:10px;color:var(--gray);font-family:'DM Mono',monospace}
+.ls-note{font-size:11px;color:var(--gray);text-align:center;padding:8px;border-radius:7px;background:rgba(255,255,255,.03);margin-top:10px}
+.ls-mcq{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px;display:none}
+.ls-mcq-hdr{font-size:10px;color:var(--gold);letter-spacing:1.2px;text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:14px}
+.ls-q{margin-bottom:18px}
+.ls-q-text{font-size:13px;font-weight:500;margin-bottom:10px;line-height:1.55}
+.ls-q-num{font-size:10px;color:var(--gold);font-family:'DM Mono',monospace;margin-bottom:4px}
+.ls-opts{display:flex;flex-direction:column;gap:7px}
+.ls-opt{display:flex;align-items:center;gap:9px;padding:9px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .2s;font-size:12px}
+.ls-opt:hover{border-color:var(--gold);background:rgba(201,168,76,.06)}
+.ls-opt.selected{border-color:var(--gold);background:rgba(201,168,76,.12);color:var(--gold)}
+.ls-opt-key{width:22px;height:22px;border-radius:5px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;font-family:'DM Mono',monospace;flex-shrink:0;color:var(--gray)}
+.ls-opt.selected .ls-opt-key{background:var(--gold);border-color:var(--gold);color:var(--navy);font-weight:700}
+.ls-voice-answer{margin-top:10px;padding:9px 12px;background:rgba(255,255,255,.04);border-radius:8px;border:1px dashed var(--border);font-size:11px;color:var(--gray);display:none}
+.ls-voice-answer.active{border-color:var(--gold);color:var(--white)}
+.btn-ls-submit{width:100%;padding:11px;background:linear-gradient(135deg,var(--gold),var(--gold-light));color:var(--navy);border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-top:6px}
+.btn-ls-submit:disabled{opacity:.4;cursor:not-allowed}
+.cheat-modal{display:none;position:fixed;inset:0;z-index:999;background:rgba(5,12,25,.97);backdrop-filter:blur(12px);align-items:center;justify-content:center}
+.cheat-modal.open{display:flex}
+.cheat-card{background:rgba(192,57,43,.1);border:1px solid rgba(192,57,43,.4);border-radius:16px;padding:38px 46px;text-align:center;max-width:440px}
+.cheat-icon{font-size:50px;margin-bottom:12px}
+.cheat-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--red);margin-bottom:7px}
+.cheat-msg{color:var(--gray);font-size:12px;line-height:1.6;margin-bottom:10px}
+.cheat-note{font-family:'DM Mono',monospace;font-size:10px;color:#e88080;margin-bottom:18px}
+.btn-resume{padding:11px 26px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:9px;color:var(--white);font-size:12px;cursor:pointer}
+
+/* APP WRAPPER */
+.app{position:relative;z-index:1;max-width:1360px;margin:0 auto;padding:26px 30px}
+
+/* ══════════════════════════════════
+   SETUP SCREEN
+══════════════════════════════════ */
+#setup-screen{max-width:520px;margin:40px auto;text-align:center}
+#setup-screen h1{font-family:'Playfair Display',serif;font-size:36px;font-weight:900;line-height:1.1;margin-bottom:9px}
+#setup-screen h1 span{color:var(--gold)}
+#setup-screen>p{color:var(--gray);font-size:13px;margin-bottom:26px;line-height:1.7}
+.round-pills{display:flex;gap:8px;margin:18px 0;justify-content:center}
+.round-pill{flex:1;padding:11px 6px;border-radius:9px;border:1px solid var(--border);background:rgba(255,255,255,.02);text-align:center}
+.round-pill .num{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--gold)}
+.round-pill .lbl{font-size:9px;color:var(--gray);margin-top:3px;text-transform:uppercase;letter-spacing:.8px}
+.setup-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:11px;text-align:left}
+.setup-grid .fg{margin-bottom:0}
+.setup-grid .fg.full{grid-column:1/-1}
+.btn-start{width:100%;padding:13px;background:linear-gradient(135deg,var(--gold),var(--gold-light));
+  color:var(--navy);border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;
+  transition:transform .15s,box-shadow .15s;box-shadow:0 4px 22px rgba(201,168,76,.3)}
+.btn-start:hover{transform:translateY(-2px);box-shadow:0 7px 28px rgba(201,168,76,.4)}
+.setup-note{text-align:center;margin-top:10px;font-size:11px;color:var(--gray)}
+.setup-note a{color:var(--gold);text-decoration:none}
+
+/* ══════════════════════════════════
+   INTERVIEW SCREEN
+══════════════════════════════════ */
+#interview-screen{display:none}
+.iv-layout{display:grid;grid-template-columns:250px 1fr 285px;gap:16px;align-items:start}
+
+/* LEFT */
+.cam-wrap{position:relative;width:100%;aspect-ratio:4/3;border-radius:10px;overflow:hidden;
+  background:#000;border:2px solid var(--border);margin-bottom:10px}
+.cam-wrap video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.cam-overlay{position:absolute;inset:0;pointer-events:none}
+.cc{position:absolute;width:14px;height:14px;border-color:var(--gold);border-style:solid;opacity:.7}
+.cc.tl{top:5px;left:5px;border-width:2px 0 0 2px}
+.cc.tr{top:5px;right:5px;border-width:2px 2px 0 0}
+.cc.bl{bottom:5px;left:5px;border-width:0 0 2px 2px}
+.cc.br{bottom:5px;right:5px;border-width:0 2px 2px 0}
+.cam-rdot{position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--red);opacity:0}
+.cam-rdot.on{opacity:1;animation:rblink .8s step-start infinite}
+@keyframes rblink{50%{opacity:.15}}
+.cam-facebox{position:absolute;border:2px solid var(--gold-light);border-radius:5px;opacity:0;pointer-events:none}
+.cam-facebox.vis{opacity:.55}
+.cam-bar{position:absolute;bottom:5px;left:5px;right:5px;display:flex;align-items:center;justify-content:space-between}
+.cam-pill{padding:2px 7px;border-radius:7px;background:rgba(0,0,0,.7);font-size:9px;font-family:'DM Mono',monospace}
+.cam-noshow{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;color:var(--gray);font-size:11px}
+.ac-log{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px}
+.ac-log-hdr{font-size:10px;color:var(--gold);letter-spacing:1.2px;text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:9px;display:flex;align-items:center;justify-content:space-between}
+.ac-cnt{font-size:10px;padding:2px 7px;border-radius:7px;background:rgba(201,168,76,.1);color:var(--gold)}
+.ac-cnt.red{background:rgba(192,57,43,.15);color:#e88080}
+.ac-events{max-height:90px;overflow-y:auto}
+.ace{font-size:10px;padding:4px 7px;margin-bottom:3px;border-radius:5px;font-family:'DM Mono',monospace;
+  display:flex;align-items:center;gap:5px;animation:fs .3s ease}
+.ace.ok{background:rgba(39,174,96,.06);color:#6fcf97;border-left:2px solid var(--green-light)}
+.ace.warn{background:rgba(230,126,34,.08);color:#f0a050;border-left:2px solid var(--warn)}
+.ace.bad{background:rgba(192,57,43,.1);color:#e88080;border-left:2px solid var(--red)}
+.ace-time{opacity:.45;flex-shrink:0}
+@keyframes fs{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:translateX(0)}}
+.cand-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;text-align:center}
+.cav-wrap{width:72px;height:72px;margin:0 auto 9px;position:relative;border-radius:50%}
+.cav-ring{position:absolute;inset:-4px;border-radius:50%;border:2px solid transparent;pointer-events:none}
+.cav-wrap.recording .cav-ring{border-color:var(--red);animation:rring 1s ease-in-out infinite}
+.cav-wrap.listening .cav-ring{border-color:var(--gold);animation:lring 2s ease-in-out infinite}
+@keyframes rring{0%,100%{box-shadow:0 0 0 0 rgba(192,57,43,.4)}50%{box-shadow:0 0 0 7px rgba(192,57,43,0)}}
+@keyframes lring{0%,100%{box-shadow:0 0 0 0 rgba(201,168,76,.3)}50%{box-shadow:0 0 0 7px rgba(201,168,76,0)}}
+.cname{font-weight:600;font-size:12px;margin-bottom:2px}
+.crole{font-size:10px;color:var(--gray)}
+.cstate{display:inline-flex;align-items:center;gap:4px;margin-top:7px;padding:3px 9px;border-radius:10px;
+  font-size:9px;letter-spacing:.8px;text-transform:uppercase;font-family:'DM Mono',monospace;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--gray);transition:all .3s}
+.cstate.recording{background:rgba(192,57,43,.15);border-color:rgba(192,57,43,.4);color:#e88080}
+.cstate.listening{background:rgba(201,168,76,.1);border-color:rgba(201,168,76,.3);color:var(--gold)}
+.cstate .sd{width:4px;height:4px;border-radius:50%;background:currentColor}
+.cstate.recording .sd{animation:blink .6s step-start infinite}
+@keyframes blink{50%{opacity:0}}
+.rnav{display:flex;flex-direction:column;gap:6px}
+.rni{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:9px;border:1px solid transparent;transition:all .2s}
+.rni.active{background:rgba(201,168,76,.08);border-color:var(--gold)}
+.rni.done{background:rgba(39,174,96,.06);border-color:rgba(39,174,96,.3)}
+.rni.locked{opacity:.4}
+.rni-icon{width:27px;height:27px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;background:rgba(255,255,255,.05)}
+.rni.active .rni-icon{background:rgba(201,168,76,.15)}
+.rni.done .rni-icon{background:rgba(39,174,96,.15)}
+.rni-name{font-size:11px;font-weight:500}
+.rni-st{font-size:9px;color:var(--gray)}
+.rni.active .rni-name{color:var(--gold)}
+.rni.done .rni-name{color:#6fcf97}
+
+/* CENTER */
+.rhdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.rtitle{font-family:'Playfair Display',serif;font-size:21px;font-weight:700}
+.rtitle span{color:var(--gold)}
+.rprog{font-size:11px;color:var(--gray);text-align:right}
+.rprog strong{color:var(--white)}
+.pbar{height:3px;background:rgba(255,255,255,.07);border-radius:2px;margin-bottom:16px;overflow:hidden}
+.pfill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light));border-radius:2px;transition:width .5s ease;width:0%}
+.iv-block{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:14px;position:relative;overflow:hidden}
+.iv-block::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:0;transition:opacity .3s}
+.iv-block.speaking::before{opacity:1;animation:scan 2s ease-in-out infinite}
+@keyframes scan{0%,100%{transform:scaleX(0);opacity:0}50%{transform:scaleX(1);opacity:1}}
+.iv-inner{display:flex;align-items:flex-start;gap:14px}
+.av-wrap{flex-shrink:0;width:96px;position:relative}
+.av-wrap svg{width:96px;height:118px}
+.av-eye-l,.av-eye-r{transform-origin:center}
+.iv-block.speaking .av-eye-l{animation:beye 3.2s ease-in-out infinite}
+.iv-block.speaking .av-eye-r{animation:beye 3.2s ease-in-out infinite .18s}
+@keyframes beye{0%,88%,100%{transform:scaleY(1)}94%{transform:scaleY(.05)}}
+.av-bar{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:3px;padding:2px 8px;border-radius:8px;
+  background:var(--navy);border:1px solid var(--border);font-size:8px;color:var(--gray);
+  font-family:'DM Mono',monospace;white-space:nowrap;z-index:2}
+.sbars{display:flex;align-items:flex-end;gap:1px;height:8px}
+.sbars span{width:2px;background:var(--gold);border-radius:1px;height:2px}
+.iv-block.speaking .sbars span:nth-child(1){animation:sb .5s ease-in-out infinite alternate;height:3px}
+.iv-block.speaking .sbars span:nth-child(2){animation:sb .5s ease-in-out infinite alternate .1s;height:7px}
+.iv-block.speaking .sbars span:nth-child(3){animation:sb .5s ease-in-out infinite alternate .05s;height:5px}
+.iv-block.speaking .sbars span:nth-child(4){animation:sb .5s ease-in-out infinite alternate .2s;height:8px}
+.iv-block.speaking .sbars span:nth-child(5){animation:sb .5s ease-in-out infinite alternate .08s;height:4px}
+@keyframes sb{to{height:2px}}
+.iv-info{flex:1}
+.iv-name{font-weight:600;font-size:12px;margin-bottom:1px}
+.iv-title{font-size:9px;color:var(--gold);letter-spacing:.8px;text-transform:uppercase;margin-bottom:9px}
+.qtext{font-size:13px;line-height:1.75;color:var(--white);min-height:50px}
+.qtext.loading{color:var(--gray);font-style:italic}
+.qdots span{animation:qdot 1.2s ease-in-out infinite;display:inline-block}
+.qdots span:nth-child(2){animation-delay:.2s}.qdots span:nth-child(3){animation-delay:.4s}
+@keyframes qdot{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-4px)}}
+.rec-area{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px}
+.rec-lbl{font-size:9px;color:var(--gray);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:11px;font-family:'DM Mono',monospace}
+.wv-wrap{height:46px;background:rgba(0,0,0,.2);border-radius:7px;margin-bottom:11px;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center}
+canvas#waveform{width:100%;height:100%}
+.wv-idle{position:absolute;font-size:11px;color:rgba(255,255,255,.2);display:flex;align-items:center;gap:6px}
+.tx-box{background:rgba(0,0,0,.2);border-radius:7px;padding:9px 11px;min-height:56px;
+  font-size:12px;line-height:1.6;color:var(--white);font-family:'DM Mono',monospace;
+  border:1px solid rgba(255,255,255,.05);margin-bottom:11px}
+.tx-ph{color:rgba(255,255,255,.18);font-style:italic}
+.rec-ctrls{display:flex;align-items:center;gap:9px}
+.btn-mic{width:44px;height:44px;border-radius:50%;background:rgba(201,168,76,.1);border:2px solid var(--gold);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;flex-shrink:0}
+.btn-mic:hover{background:rgba(201,168,76,.2);transform:scale(1.05)}
+.btn-mic.on{background:rgba(192,57,43,.2);border-color:var(--red);animation:rpulse 1s ease-in-out infinite}
+@keyframes rpulse{0%,100%{box-shadow:0 0 0 0 rgba(192,57,43,.4)}50%{box-shadow:0 0 0 8px rgba(192,57,43,0)}}
+.mic-dot{width:14px;height:14px;border-radius:50%;background:var(--gold);transition:all .2s}
+.btn-mic.on .mic-dot{background:var(--red);border-radius:3px;width:11px;height:11px}
+.rec-st{flex:1}
+.rs-m{font-size:12px;font-weight:500}
+.rs-s{font-size:10px;color:var(--gray);margin-top:2px}
+.btn-sub{padding:9px 18px;background:linear-gradient(135deg,var(--gold),var(--gold-light));
+  color:var(--navy);border:none;border-radius:7px;font-weight:600;font-size:12px;cursor:pointer;transition:all .2s;flex-shrink:0}
+.btn-sub:hover{transform:translateY(-1px);box-shadow:0 3px 14px rgba(201,168,76,.3)}
+.btn-sub:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* MOCK CALL AREA */
+.mc-area{display:none}
+.mc-brief{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px}
+.mc-hdr{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.mc-icon{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-light));
+  display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.mc-t{font-family:'Playfair Display',serif;font-size:16px;font-weight:700}
+.mc-sub{font-size:10px;color:var(--gold);margin-top:2px}
+.mc-scenario{background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.06);border-radius:7px;
+  padding:12px 14px;font-size:12px;line-height:1.7;color:#c5cdd8;margin-bottom:13px}
+.mc-scenario strong{color:var(--white)}
+.mc-tips{display:flex;flex-direction:column;gap:6px;margin-bottom:15px}
+.mc-tip{display:flex;align-items:flex-start;gap:7px;font-size:11px;color:var(--gray)}
+.mc-tip-ic{flex-shrink:0;font-size:12px}
+.btn-call{width:100%;padding:13px;background:linear-gradient(135deg,#1a7a4a,var(--green-light));
+  color:var(--white);border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  transition:transform .15s,box-shadow .15s;box-shadow:0 4px 18px rgba(26,122,74,.35)}
+.btn-call:hover{transform:translateY(-2px);box-shadow:0 7px 24px rgba(26,122,74,.45)}
+.call-note{text-align:center;font-size:10px;color:var(--gray);margin-top:8px}
+.call-active{display:none;background:linear-gradient(160deg,#071a0f 0%,#071520 100%);
+  border:1px solid rgba(39,174,96,.25);border-radius:12px;padding:18px;margin-bottom:14px}
+.call-active.show{display:block}
+.call-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.live-badge{display:flex;align-items:center;gap:5px;padding:3px 10px;border-radius:18px;
+  background:rgba(39,174,96,.15);border:1px solid rgba(39,174,96,.4);
+  font-size:9px;color:var(--green-light);font-family:'DM Mono',monospace;letter-spacing:.8px}
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--green-light);animation:ai-pulse 1s ease-in-out infinite}
+.call-timer{font-family:'DM Mono',monospace;font-size:12px;color:var(--white);letter-spacing:1px}
+.call-persona{font-size:10px;color:var(--gray);font-family:'DM Mono',monospace}
+.convai-center{display:flex;justify-content:center;margin-bottom:16px;min-height:80px;align-items:center}
+elevenlabs-convai{--el-primary-color:#c9a84c;--el-bg-color:#0d1f3c}
+.call-tx{background:rgba(0,0,0,.25);border-radius:7px;padding:10px 12px;border:1px solid rgba(255,255,255,.05);margin-bottom:13px;min-height:70px;max-height:140px;overflow-y:auto}
+.call-tx-lbl{font-size:9px;color:var(--gray);letter-spacing:1px;text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:7px}
+.call-tx-content{font-size:11px;line-height:1.7;font-family:'DM Mono',monospace}
+.ct-agent{color:#6fcf97;margin-bottom:3px}
+.ct-agent::before{content:'Customer: ';font-weight:600}
+.ct-cand{color:var(--white);margin-bottom:3px}
+.ct-cand::before{content:'You: ';font-weight:600;color:var(--gold)}
+.call-tx-ph{color:rgba(255,255,255,.2);font-style:italic;font-size:11px}
+.btn-endcall{width:100%;padding:11px;background:linear-gradient(135deg,#922b21,var(--red));
+  color:var(--white);border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:7px;transition:all .2s;
+  box-shadow:0 3px 16px rgba(192,57,43,.3)}
+.btn-endcall:hover{transform:translateY(-1px);box-shadow:0 5px 20px rgba(192,57,43,.45)}
+.btn-endcall:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+/* RIGHT PANEL */
+.proc-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px}
+.proc-panel h3{font-size:10px;color:var(--gold);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:13px;font-family:'DM Mono',monospace}
+.proc-step{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.proc-step:last-child{border-bottom:none}
+.psi{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.psi.done{background:rgba(39,174,96,.15)}
+.psi.active{background:rgba(201,168,76,.15);animation:ppulse 1.5s ease-in-out infinite}
+@keyframes ppulse{0%,100%{opacity:1}50%{opacity:.5}}
+.ps-main{font-size:11px;font-weight:500}
+.ps-sub{font-size:10px;color:var(--gray);margin-top:2px}
+.ps-sub.done{color:#6fcf97}
+.prog-sum{margin-top:14px;padding:12px;background:rgba(0,0,0,.15);border-radius:7px;border:1px solid rgba(255,255,255,.05);text-align:center}
+.psm-lbl{font-size:10px;color:var(--gray);margin-bottom:5px}
+.psm-bar{height:3px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden}
+.psm-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light));border-radius:2px;transition:width .8s ease;width:0%}
+.psm-note{font-size:10px;color:var(--gray);margin-top:7px;line-height:1.5}
+
+/* OVERLAYS */
+.eval-overlay{display:none;position:fixed;inset:0;z-index:100;background:rgba(5,12,25,.7);
+  backdrop-filter:blur(4px);align-items:center;justify-content:center;flex-direction:column;gap:11px}
+.eval-overlay.open{display:flex}
+.eval-spin{width:46px;height:46px;border-radius:50%;border:3px solid rgba(201,168,76,.2);border-top-color:var(--gold);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.eval-t{color:var(--white);font-size:13px}
+.eval-s{color:var(--gray);font-size:11px}
+.gate-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(5,12,25,.93);backdrop-filter:blur(8px);align-items:center;justify-content:center}
+.gate-overlay.open{display:flex}
+.gate-card{background:var(--surface);border:1px solid var(--border);border-radius:17px;padding:38px 46px;text-align:center;max-width:420px;position:relative;overflow:hidden}
+.gate-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.gate-icon{font-size:50px;margin-bottom:14px}
+.gate-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;margin-bottom:7px;color:var(--gold)}
+.gate-msg{color:var(--gray);font-size:12px;line-height:1.6;margin-bottom:22px}
+.btn-next{padding:11px 26px;background:linear-gradient(135deg,var(--gold),var(--gold-light));color:var(--navy);border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-next:hover{transform:translateY(-2px);box-shadow:0 5px 22px rgba(201,168,76,.4)}
+.btn-retry{padding:11px 26px;background:transparent;color:var(--white);border:1px solid var(--border);border-radius:9px;font-size:13px;cursor:pointer;margin-left:8px}
+.btn-retry:hover{border-color:var(--white)}
+
+/* ══════════════════════════════════
+   THANK YOU SCREEN
+══════════════════════════════════ */
+#thankyou-screen{display:none}
+.ty-wrap{max-width:520px;margin:50px auto;text-align:center}
+.ty-icon{font-size:68px;margin-bottom:20px;animation:tpop .5s ease}
+@keyframes tpop{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+.ty-h{font-family:'Playfair Display',serif;font-size:32px;font-weight:900;margin-bottom:10px}
+.ty-h span{color:var(--gold)}
+.ty-p{font-size:14px;color:var(--gray);line-height:1.7;margin-bottom:28px}
+.ty-status{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:10px;
+  background:rgba(39,174,96,.1);border:1px solid rgba(39,174,96,.3);color:#6fcf97;font-size:12px;margin-bottom:26px}
+.ty-dot{width:6px;height:6px;border-radius:50%;background:var(--green-light);animation:ai-pulse 1.2s ease-in-out infinite}
+.ty-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:24px 28px;margin-bottom:20px;text-align:left}
+.ty-card-t{font-size:9px;color:var(--gold);letter-spacing:1.2px;text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:13px}
+.ty-row{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.ty-row:last-child{border-bottom:none}
+.ty-ri{font-size:15px;width:22px;text-align:center;flex-shrink:0}
+.ty-rt{font-size:12px;color:var(--gray)}
+.ty-rt strong{color:var(--white)}
+.ty-ref{font-size:11px;color:var(--gray)}
+.ty-ref strong{color:var(--gold)}
+
+/* ══════════════════════════════════
+   ADMIN LOGIN
+══════════════════════════════════ */
+#admin-login-screen{display:none}
+.adm-login{max-width:480px;margin:60px auto;text-align:center}
+.adm-login h1{font-family:'Playfair Display',serif;font-size:32px;font-weight:700;margin-bottom:6px}
+.adm-login h1 span{color:var(--gold)}
+.adm-login p{color:var(--gray);font-size:12px;margin-bottom:18px}
+.adm-pw-hint{font-size:11px;color:var(--gold);font-family:'DM Mono',monospace;margin-bottom:14px;padding:9px 14px;background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.25);border-radius:8px;text-align:left}
+.adm-err{background:rgba(192,57,43,.1);border:1px solid rgba(192,57,43,.3);border-radius:7px;
+  padding:9px 12px;font-size:11px;color:#e88080;margin-bottom:12px;display:none}
+.adm-err.show{display:block}
+.btn-adm-login{width:100%;padding:12px;background:linear-gradient(135deg,var(--gold),var(--gold-light));
+  color:var(--navy);border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;margin-top:4px}
+.btn-adm-login:hover{opacity:.9}
+
+/* ══════════════════════════════════
+   ADMIN DASHBOARD
+══════════════════════════════════ */
+#admin-screen{display:none}
+.adm-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.adm-hdr h1{font-family:'Playfair Display',serif;font-size:24px;font-weight:700}
+.adm-hdr h1 span{color:var(--gold)}
+.adm-acts{display:flex;gap:7px}
+.btn-adm-out{padding:7px 14px;background:transparent;border:1px solid var(--border);border-radius:7px;color:var(--gray);cursor:pointer;font-size:11px}
+.btn-adm-out:hover{border-color:var(--red);color:var(--red)}
+.btn-adm-csv{padding:7px 14px;background:linear-gradient(135deg,var(--gold),var(--gold-light));color:var(--navy);border:none;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat-c{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center}
+.stat-v{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--gold)}
+.stat-l{font-size:9px;color:var(--gray);margin-top:3px;text-transform:uppercase;letter-spacing:.8px}
+.adm-filters{display:flex;gap:9px;margin-bottom:13px;align-items:center}
+.f-search{flex:1;padding:6px 11px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:7px;color:var(--white);font-size:11px;font-family:'DM Mono',monospace;outline:none;user-select:text}
+.f-search:focus{border-color:var(--gold)}
+.f-search::placeholder{color:var(--gray)}
+.f-sel{padding:6px 11px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:7px;color:var(--white);font-size:11px;font-family:'DM Mono',monospace;outline:none;cursor:pointer}
+.f-sel:focus{border-color:var(--gold)}
+.results-tbl{width:100%;border-collapse:collapse}
+.results-tbl th{padding:9px 12px;text-align:left;font-size:9px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)}
+.results-tbl td{padding:10px 12px;font-size:11px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+.results-tbl tr:hover td{background:rgba(255,255,255,.02)}
+.vpill{display:inline-flex;padding:2px 9px;border-radius:9px;font-size:9px;font-weight:600;font-family:'DM Mono',monospace}
+.vpill.hire{background:rgba(39,174,96,.15);color:#6fcf97;border:1px solid rgba(39,174,96,.3)}
+.vpill.reject{background:rgba(192,57,43,.12);color:#e88080;border:1px solid rgba(192,57,43,.3)}
+.ipill{display:inline-flex;padding:2px 8px;border-radius:7px;font-size:9px;font-family:'DM Mono',monospace}
+.ipill.clean{background:rgba(39,174,96,.1);color:#6fcf97}
+.ipill.review{background:rgba(230,126,34,.1);color:#f0a050}
+.ipill.compromised{background:rgba(192,57,43,.1);color:#e88080}
+.btn-view{padding:3px 9px;background:rgba(201,168,76,.1);border:1px solid var(--border);border-radius:5px;color:var(--gold);cursor:pointer;font-size:9px;font-family:'DM Mono',monospace}
+.btn-view:hover{background:rgba(201,168,76,.2);border-color:var(--gold)}
+.btn-del{padding:3px 9px;background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.2);border-radius:5px;color:#e88080;cursor:pointer;font-size:9px;font-family:'DM Mono',monospace;margin-left:3px}
+.btn-del:hover{background:rgba(192,57,43,.18)}
+.empty-st{text-align:center;padding:40px 20px;color:var(--gray)}
+.empty-st .ei{font-size:44px;margin-bottom:10px;opacity:.3}
+
+/* DETAIL MODAL */
+.detail-modal{display:none;position:fixed;inset:0;z-index:2000;background:rgba(5,12,25,.92);backdrop-filter:blur(8px);align-items:flex-start;justify-content:center;overflow-y:auto;padding:28px 14px}
+.detail-modal.open{display:flex}
+.detail-card{background:var(--surface);border:1px solid var(--border);border-radius:15px;padding:28px 32px;width:100%;max-width:680px;position:relative;margin:auto}
+.detail-x{position:absolute;top:12px;right:16px;background:none;border:none;color:var(--gray);font-size:18px;cursor:pointer}
+.detail-card h2{font-family:'Playfair Display',serif;font-size:20px;color:var(--gold);margin-bottom:3px}
+.dm-meta{font-size:10px;color:var(--gray);margin-bottom:18px}
+.dm-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:16px}
+.dm-sc{background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:12px;text-align:center}
+.dm-sc-l{font-size:9px;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
+.dm-sc-v{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:var(--gold)}
+.dm-bk h3{font-size:12px;font-weight:600;color:var(--gold);margin-bottom:10px}
+.db-row{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+.db-lbl{width:110px;font-size:10px;color:var(--gray);flex-shrink:0}
+.db-bar{flex:1;height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden}
+.db-fill{height:100%;border-radius:3px}
+.db-fill.h{background:linear-gradient(90deg,#1a7a4a,#27ae60)}
+.db-fill.m{background:linear-gradient(90deg,#8b6914,var(--gold))}
+.db-fill.l{background:linear-gradient(90deg,#922b21,#c0392b)}
+.db-val{width:32px;text-align:right;font-size:10px;color:var(--white);font-family:'DM Mono',monospace}
+.dm-sec{margin-bottom:15px}
+.dm-sec h3{font-size:10px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:8px}
+.dm-sec p{font-size:11px;color:#c5cdd8;line-height:1.7}
+.int-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.int-item{padding:9px;background:rgba(0,0,0,.15);border-radius:6px;border:1px solid rgba(255,255,255,.05)}
+.int-lbl{font-size:9px;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;font-family:'DM Mono',monospace;margin-bottom:3px}
+.int-val{font-size:14px;font-weight:600}
+.int-val.ok{color:var(--green-light)}.int-val.warn{color:var(--warn)}.int-val.bad{color:var(--red)}
+.fb-list{max-height:140px;overflow-y:auto}
+.fb-item{font-size:10px;padding:6px 9px;border-radius:5px;background:rgba(255,255,255,.03);border-left:3px solid var(--gray);margin-bottom:4px;color:var(--gray);line-height:1.5}
+.fb-item.good{border-left-color:var(--green-light);color:#a8dab5}
+.fb-item.warn{border-left-color:var(--gold);color:#e8c96a}
+.fb-item.bad{border-left-color:var(--red);color:#e88080}
+
+/* TOAST */
+.toast{position:fixed;bottom:18px;right:18px;z-index:9999;background:var(--surface);border:1px solid var(--border);
+  border-radius:9px;padding:9px 15px;font-size:11px;color:var(--white);box-shadow:0 7px 28px rgba(0,0,0,.4);
+  transform:translateY(70px);opacity:0;transition:all .3s ease;display:flex;align-items:center;gap:7px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.err{border-color:rgba(192,57,43,.5)}.toast.ok{border-color:rgba(39,174,96,.5)}.toast.wn{border-color:rgba(230,126,34,.5)}
+
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(201,168,76,.3);border-radius:2px}
+@media(max-width:960px){.iv-layout{grid-template-columns:1fr}.left-panel,.right-panel{display:none}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">M</div>
+    <div class="logo-text"><strong>Midland Credit Management</strong><span>AI Voice Interview Platform</span></div>
+  </div>
+  <div class="hdr-right">
+    <div class="ai-badge"><span class="pulse"></span> Built-in AI</div>
+    <div class="ac-ind" id="ac-ind"><span class="ac-dot"></span><span id="ac-ind-txt">Integrity OK</span></div>
+    <button class="hdr-btn" id="btn-copilot" onclick="openCfg()"><span class="dot"></span> MS Copilot</button>
+    <button class="hdr-btn" id="btn-eleven" onclick="openCfg()"><span class="dot"></span> ElevenLabs</button>
+    <button class="hdr-btn" onclick="goAdmin()"><span class="dot" style="background:#8a9ab5"></span> Admin</button>
+  </div>
+</header>
+
+<!-- ALERT BANNER -->
+<div class="alert-banner" id="alert-banner"><span id="alert-txt">Alert</span></div>
+
+<!-- CONFIG MODAL -->
+<div class="modal-bg" id="cfg-modal">
+  <div class="modal-box">
+    <button class="modal-x" onclick="closeCfg()">✕</button>
+    <h2>Platform Configuration</h2>
+    <p>Configure APIs for voice, email delivery, and admin access. Platform works fully without any keys.</p>
+    <div class="msec">Admin &amp; Email</div>
+    <div class="fg"><label>Admin Password</label><input type="password" id="c-apass" placeholder="Set admin dashboard password..."/><div class="hint">Default: mcm-admin-2024</div></div>
+    <div class="fg"><label>Recruiter Email</label><input type="email" id="c-remail" placeholder="recruiter@midlandcredit.com"/></div>
+    <div class="msec">EmailJS (free email delivery)</div>
+    <div class="fg"><label>Service ID</label><input type="text" id="c-ejs-svc" placeholder="service_xxxxxxx"/></div>
+    <div class="fg"><label>Template ID</label><input type="text" id="c-ejs-tpl" placeholder="template_xxxxxxx"/></div>
+    <div class="fg"><label>Public Key</label><input type="text" id="c-ejs-pub" placeholder="Your EmailJS public key"/><div class="hint">Free at emailjs.com · 200 emails/month</div></div>
+    <div class="msec">ElevenLabs Voice</div>
+    <div class="fg"><label>API Key</label><input type="password" id="c-elkey" placeholder="Your ElevenLabs API key..."/></div>
+    <div class="fg"><label>Voice ID (for Rounds 1 &amp; 2)</label><input type="text" id="c-elvid" placeholder="ElevenLabs voice ID..."/></div>
+    <div class="msec">Microsoft Copilot (Azure OpenAI)</div>
+    <div class="fg"><label>Endpoint</label><input type="text" id="c-azep" placeholder="https://YOUR-RESOURCE.openai.azure.com/"/></div>
+    <div class="fg"><label>API Key</label><input type="password" id="c-azkey" placeholder="Your Azure OpenAI key..."/></div>
+    <div class="fg"><label>Deployment</label><input type="text" id="c-azdep" placeholder="e.g. gpt-4o"/></div>
+    <div class="modal-acts">
+      <button class="btn-primary" onclick="saveCfg()">Save Configuration</button>
+      <button class="btn-ghost" onclick="closeCfg()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHEAT MODAL -->
+<div class="cheat-modal" id="cheat-modal">
+  <div class="cheat-card">
+    <div class="cheat-icon">🚨</div>
+    <div class="cheat-title">Integrity Violation</div>
+    <div class="cheat-msg" id="cheat-msg">A potential integrity violation has been detected.</div>
+    <div class="cheat-note" id="cheat-note">Violation #1 · Logged in your report</div>
+    <button class="btn-resume" id="cheat-resume-btn" onclick="resumeCheat()">I Understand — Resume</button>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="detail-modal" id="detail-modal">
+  <div class="detail-card">
+    <button class="detail-x" onclick="closeDetail()">✕</button>
+    <h2 id="dm-name">Candidate</h2>
+    <div class="dm-meta" id="dm-meta">—</div>
+    <div class="dm-grid">
+      <div class="dm-sc"><div class="dm-sc-l">Reading</div><div class="dm-sc-v" id="dm-r1">—</div></div>
+      <div class="dm-sc"><div class="dm-sc-l">Elocution</div><div class="dm-sc-v" id="dm-r2">—</div></div>
+      <div class="dm-sc"><div class="dm-sc-l">Listening</div><div class="dm-sc-v" id="dm-r3">—</div></div>
+      <div class="dm-sc"><div class="dm-sc-l">Mock Call</div><div class="dm-sc-v" id="dm-r4">—</div></div>
+    </div>
+    <div class="dm-bk">
+      <h3>Score Breakdown</h3>
+      <div class="db-row"><div class="db-lbl">Pronunciation</div><div class="db-bar"><div class="db-fill" id="dm-bp"></div></div><div class="db-val" id="dm-vp">—</div></div>
+      <div class="db-row"><div class="db-lbl">Fluency</div><div class="db-bar"><div class="db-fill" id="dm-bf"></div></div><div class="db-val" id="dm-vf">—</div></div>
+      <div class="db-row"><div class="db-lbl">Content</div><div class="db-bar"><div class="db-fill" id="dm-bc"></div></div><div class="db-val" id="dm-vc">—</div></div>
+      <div class="db-row"><div class="db-lbl">Confidence</div><div class="db-bar"><div class="db-fill" id="dm-bco"></div></div><div class="db-val" id="dm-vco">—</div></div>
+    </div>
+    <div class="dm-sec">
+      <h3>Integrity Report</h3>
+      <div class="int-grid">
+        <div class="int-item"><div class="int-lbl">Tab Switches</div><div class="int-val" id="dm-tabs">0</div></div>
+        <div class="int-item"><div class="int-lbl">Copy Attempts</div><div class="int-val" id="dm-copy">0</div></div>
+        <div class="int-item"><div class="int-lbl">Face Off-Screen</div><div class="int-val" id="dm-face">0</div></div>
+        <div class="int-item"><div class="int-lbl">Overall</div><div class="int-val" id="dm-int">—</div></div>
+      </div>
+    </div>
+    <div class="dm-sec"><h3>Evaluator Notes</h3><div class="fb-list" id="dm-fb"></div></div>
+    <div class="dm-sec"><h3>AI Summary</h3><p id="dm-sum">—</p></div>
+    <div style="text-align:right;margin-top:16px"><button class="btn-ghost" onclick="closeDetail()">Close</button></div>
+  </div>
+</div>
+
+<!-- EVAL OVERLAY -->
+<div class="eval-overlay" id="eval-overlay">
+  <div class="eval-spin"></div>
+  <div class="eval-t" id="eval-t">Processing...</div>
+  <div class="eval-s" id="eval-s">Please wait</div>
+</div>
+
+<!-- GATE OVERLAY -->
+<div class="gate-overlay" id="gate-overlay">
+  <div class="gate-card">
+    <div class="gate-icon" id="gate-icon">✅</div>
+    <div class="gate-title" id="gate-title">Round Complete</div>
+    <div class="gate-msg" id="gate-msg">Your responses have been recorded.</div>
+    <div>
+      <button class="btn-next" id="btn-next" onclick="gateNext()">Continue →</button>
+      <button class="btn-retry" id="btn-retry" onclick="gateRetry()" style="display:none">Try Again</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ════════════════════════════════
+     SETUP SCREEN
+════════════════════════════════ -->
+<div class="app" id="setup-screen">
+  <div style="text-align:center;margin-bottom:10px">
+    <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;background:rgba(201,168,76,.1);border:1px solid var(--border);font-size:9px;color:var(--gold);font-family:'DM Mono',monospace;letter-spacing:1px">✦ AI-POWERED · RESULTS DELIVERED SECURELY</div>
+  </div>
+  <h1>Voice Interview<br><span>Assessment Platform</span></h1>
+  <p>Complete all four rounds to the best of your ability. Your responses are evaluated and reviewed privately by the MCM recruitment team.</p>
+  <div class="round-pills">
+    <div class="round-pill"><div class="num">01</div><div class="lbl">Reading</div></div>
+    <div class="round-pill"><div class="num">02</div><div class="lbl">Elocution</div></div>
+    <div class="round-pill"><div class="num">03</div><div class="lbl">Listening</div></div>
+    <div class="round-pill"><div class="num">04</div><div class="lbl">Mock Call</div></div>
+  </div>
+  <div style="text-align:left">
+    <div class="setup-grid">
+      <div class="fg"><label>First Name</label><input type="text" id="s-first" placeholder="First name"/></div>
+      <div class="fg"><label>Last Name</label><input type="text" id="s-last" placeholder="Last name"/></div>
+      <div class="fg full"><label>Position Applied For</label>
+        <select id="s-role">
+          <option>Collections Specialist</option>
+          <option>Senior Collections Agent</option>
+          <option>Account Resolution Specialist</option>
+          <option>Customer Service Representative</option>
+        </select>
+      </div>
+      <div class="fg full"><label>Email Address</label><input type="email" id="s-email" placeholder="your.email@example.com"/></div>
+    </div>
+    <button class="btn-start" onclick="startInterview()">Begin Assessment →</button>
+    <div class="setup-note">Results reviewed privately by MCM · <a href="#" onclick="openCfg();return false">Configure platform</a></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     INTERVIEW SCREEN
+════════════════════════════════ -->
+<div class="app" id="interview-screen">
+  <div class="iv-layout">
+
+    <!-- LEFT -->
+    <div class="left-panel">
+      <div class="cam-wrap">
+        <video id="cam-vid" autoplay muted playsinline></video>
+        <div class="cam-overlay">
+          <div class="cc tl"></div><div class="cc tr"></div><div class="cc bl"></div><div class="cc br"></div>
+          <div class="cam-rdot" id="cam-rdot"></div>
+          <div class="cam-facebox" id="cam-fb"></div>
+          <div class="cam-bar">
+            <div class="cam-pill" style="color:var(--gold)">● LIVE</div>
+            <div class="cam-pill" id="cam-rec-pill" style="display:none;color:var(--red)">⏺ REC</div>
+          </div>
+        </div>
+        <div class="cam-noshow" id="cam-noshow">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 8l4 4-4 4V8zM3 8h11a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/></svg>
+          Camera unavailable
+        </div>
+      </div>
+      <div class="ac-log">
+        <div class="ac-log-hdr">Integrity Monitor<span class="ac-cnt" id="ac-cnt">0 events</span></div>
+        <div class="ac-events" id="ac-events"><div style="font-size:10px;color:rgba(255,255,255,.15);text-align:center;padding:9px;font-family:'DM Mono',monospace">No events logged</div></div>
+      </div>
+      <div class="cand-card">
+        <div class="cav-wrap" id="cav-wrap">
+          <div class="cav-ring"></div>
+          <svg width="72" height="72" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+            <defs><radialGradient id="cg" cx="50%" cy="35%" r="55%"><stop offset="0%" stop-color="#4a7fa5"/><stop offset="100%" stop-color="#1a3060"/></radialGradient></defs>
+            <ellipse cx="40" cy="72" rx="26" ry="12" fill="#112040"/>
+            <rect x="17" y="60" width="46" height="18" rx="8" fill="#112040"/>
+            <path d="M33,60 L40,68 L47,60" fill="#0a1628" opacity=".7"/>
+            <path d="M40,64 L43,76 L40,73 L37,76 Z" fill="#c9a84c"/>
+            <rect x="33" y="50" width="14" height="13" rx="4" fill="url(#cg)"/>
+            <circle cx="40" cy="32" r="23" fill="url(#cg)"/>
+            <path d="M17,27 Q17,11 40,9 Q63,11 63,27 Q58,16 40,15 Q22,16 17,27Z" fill="#1a1010"/>
+            <ellipse cx="17" cy="32" rx="3.5" ry="4.5" fill="#4a7fa5"/>
+            <ellipse cx="63" cy="32" rx="3.5" ry="4.5" fill="#4a7fa5"/>
+            <path d="M26,20 Q30,18 34,19" stroke="#1a1010" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+            <path d="M46,19 Q50,18 54,20" stroke="#1a1010" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+            <ellipse cx="31" cy="27" rx="4.5" ry="4.5" fill="white"/><ellipse cx="31" cy="27" rx="2.7" ry="2.7" fill="#1a1a2e"/><ellipse cx="32" cy="26" rx=".9" ry=".9" fill="white"/>
+            <ellipse cx="49" cy="27" rx="4.5" ry="4.5" fill="white"/><ellipse cx="49" cy="27" rx="2.7" ry="2.7" fill="#1a1a2e"/><ellipse cx="50" cy="26" rx=".9" ry=".9" fill="white"/>
+            <path d="M38,31 Q40,36 42,31" stroke="#2a4070" stroke-width="1.1" fill="none"/>
+            <path id="cand-mouth" d="M33,42 Q40,47 47,42" stroke="#1a1010" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="cname" id="cname">Candidate</div>
+        <div class="crole" id="crole">Position</div>
+        <div class="cstate" id="cstate"><span class="sd"></span><span id="cstate-txt">Waiting</span></div>
+      </div>
+      <div class="rnav">
+        <div class="rni active" id="rni-1"><div class="rni-icon">📖</div><div><div class="rni-name">Controlled Reading</div><div class="rni-st" id="rni-st-1">In Progress</div></div></div>
+        <div class="rni locked" id="rni-2"><div class="rni-icon">🎙️</div><div><div class="rni-name">Spontaneous Speech</div><div class="rni-st" id="rni-st-2">Locked</div></div></div>
+        <div class="rni locked" id="rni-3"><div class="rni-icon">👂</div><div><div class="rni-name">Listening &amp; Comprehension</div><div class="rni-st" id="rni-st-3">Locked</div></div></div>
+        <div class="rni locked" id="rni-4"><div class="rni-icon">📞</div><div><div class="rni-name">Mock Call</div><div class="rni-st" id="rni-st-4">Locked</div></div></div>
+      </div>
+    </div>
+
+    <!-- CENTER -->
+    <div class="center-panel">
+      <div class="rhdr">
+        <div>
+          <div style="font-size:9px;color:var(--gold);letter-spacing:1.2px;text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:2px" id="rlabel">Round 1</div>
+          <div class="rtitle" id="rtitle">Communication <span>Round</span></div>
+        </div>
+        <div class="rprog">Q <strong id="qcur">1</strong> / <strong id="qtot">4</strong></div>
+      </div>
+      <div class="pbar"><div class="pfill" id="pfill"></div></div>
+
+      <!-- AI INTERVIEWER BLOCK -->
+      <div class="iv-block" id="iv-block">
+        <div class="iv-inner">
+          <div class="av-wrap">
+            <svg width="96" height="118" viewBox="0 0 100 122" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <radialGradient id="ag" cx="50%" cy="38%" r="58%"><stop offset="0%" stop-color="#3d7a55"/><stop offset="100%" stop-color="#1e3d28"/></radialGradient>
+                <radialGradient id="sg" cx="50%" cy="20%" r="80%"><stop offset="0%" stop-color="#1a3060"/><stop offset="100%" stop-color="#0a1628"/></radialGradient>
+              </defs>
+              <ellipse cx="50" cy="111" rx="32" ry="14" fill="#0a1628"/>
+              <rect x="20" y="87" width="60" height="30" rx="11" fill="url(#sg)"/>
+              <path d="M43,87 L50,98 L57,87" fill="#f0ece0" opacity=".92"/>
+              <path d="M50,95 L54,113 L50,109 L46,113 Z" fill="#c9a84c"/>
+              <path d="M43,87 L28,97 L32,113" fill="#112040"/><path d="M57,87 L72,97 L68,113" fill="#112040"/>
+              <rect x="43" y="71" width="14" height="20" rx="5" fill="url(#ag)"/>
+              <circle cx="50" cy="45" r="29" fill="url(#ag)"/>
+              <path d="M21,38 Q21,16 50,14 Q79,16 79,38 Q73,23 50,21 Q27,23 21,38Z" fill="#0e0e0e"/>
+              <ellipse cx="21" cy="45" rx="4.5" ry="5.5" fill="#3d7a55"/><ellipse cx="79" cy="45" rx="4.5" ry="5.5" fill="#3d7a55"/>
+              <path d="M30,32 Q36,28 42,31" stroke="#0e0e0e" stroke-width="2" fill="none" stroke-linecap="round"/>
+              <path d="M58,31 Q64,28 70,32" stroke="#0e0e0e" stroke-width="2" fill="none" stroke-linecap="round"/>
+              <rect x="27" y="36" width="18" height="14" rx="5.5" fill="rgba(0,0,0,.15)" stroke="#c9a84c" stroke-width="1.7"/>
+              <rect x="55" y="36" width="18" height="14" rx="5.5" fill="rgba(0,0,0,.15)" stroke="#c9a84c" stroke-width="1.7"/>
+              <line x1="45" y1="43" x2="55" y2="43" stroke="#c9a84c" stroke-width="1.7"/>
+              <line x1="21" y1="43" x2="27" y2="43" stroke="#c9a84c" stroke-width="1.7"/>
+              <line x1="73" y1="43" x2="79" y2="43" stroke="#c9a84c" stroke-width="1.7"/>
+              <ellipse class="av-eye-l" cx="36" cy="43" rx="5.5" ry="5" fill="white"/>
+              <ellipse cx="36" cy="43" rx="3.2" ry="3.2" fill="#1a1a2e"/><ellipse cx="37.2" cy="41.8" rx="1.1" ry="1.1" fill="white"/>
+              <ellipse class="av-eye-r" cx="64" cy="43" rx="5.5" ry="5" fill="white"/>
+              <ellipse cx="64" cy="43" rx="3.2" ry="3.2" fill="#1a1a2e"/><ellipse cx="65.2" cy="41.8" rx="1.1" ry="1.1" fill="white"/>
+              <path d="M47,50 Q50,57 53,50" stroke="#1e3d28" stroke-width="1.4" fill="none"/>
+              <ellipse cx="29" cy="55" rx="6" ry="4.5" fill="#c9a84c" opacity=".09"/>
+              <ellipse cx="71" cy="55" rx="6" ry="4.5" fill="#c9a84c" opacity=".09"/>
+              <path id="av-idle" d="M39,63 Q50,70 61,63" stroke="#0e0e0e" stroke-width="2" fill="none" stroke-linecap="round"/>
+              <ellipse id="av-speak" cx="50" cy="65" rx="9" ry="4.5" fill="#0a0404" opacity="0"/>
+              <rect x="33" y="98" width="14" height="8" rx="2" fill="#c9a84c" opacity=".9"/>
+              <text x="40" y="104.5" text-anchor="middle" font-size="5" fill="#0a1628" font-weight="bold" font-family="serif">MCM</text>
+            </svg>
+            <div class="av-bar"><div class="sbars"><span></span><span></span><span></span><span></span><span></span></div><span id="av-st">Ready</span></div>
+          </div>
+          <div class="iv-info">
+            <div class="iv-name">Alex Chen</div>
+            <div class="iv-title">Senior HR Interviewer · MCM</div>
+            <div class="qtext loading" id="qtext"><span class="qdots"><span>•</span><span>•</span><span>•</span></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STANDARD RECORDING AREA (Rounds 1 & 2) -->
+      <div class="rec-area" id="rec-area">
+        <div class="rec-lbl">Your Response</div>
+        <div class="wv-wrap"><canvas id="waveform"></canvas><div class="wv-idle" id="wv-idle">🎙️ Press record to respond</div></div>
+        <div class="tx-box" id="tx-box"><span class="tx-ph">Your speech will appear here in real time...</span></div>
+        <div class="rec-ctrls">
+          <button class="btn-mic" id="btn-mic" onclick="toggleRec()"><div class="mic-dot"></div></button>
+          <div class="rec-st"><div class="rs-m" id="rs-m">Ready to record</div><div class="rs-s" id="rs-s">Click the mic to start</div></div>
+          <button class="btn-sub" id="btn-sub" onclick="submitAns()" disabled>Submit →</button>
+        </div>
+      </div>
+
+      <!-- MOCK CALL AREA (Round 3) -->
+      <div class="mc-area" id="mc-area">
+        <div class="mc-brief" id="mc-brief">
+          <div class="mc-hdr">
+            <div class="mc-icon">📞</div>
+            <div><div class="mc-t">Live Call Simulation</div><div class="mc-sub">Round 3 · MCM Collections Scenario</div></div>
+          </div>
+          <div class="mc-scenario" id="mc-scenario">Loading scenario...</div>
+          <div class="mc-tips">
+            <div class="mc-tip"><span class="mc-tip-ic">🎙️</span>Speak naturally — the AI customer responds in real time</div>
+            <div class="mc-tip"><span class="mc-tip-ic">⏱️</span>Each scenario lasts approximately 2–3 minutes</div>
+            <div class="mc-tip"><span class="mc-tip-ic">📋</span>You will complete <span id="mc-total">4</span> call scenarios</div>
+            <div class="mc-tip"><span class="mc-tip-ic">🔒</span>The conversation is recorded and scored automatically</div>
+          </div>
+          <button class="btn-call" id="btn-call" onclick="startCall()">📞 &nbsp;Connect to Customer</button>
+          <div class="call-note">Scenario <span id="mc-num">1</span> of <span id="mc-of">4</span></div>
+        </div>
+        <div class="call-active" id="call-active">
+          <div class="call-topbar">
+            <div style="display:flex;align-items:center;gap:9px">
+              <div class="live-badge"><span class="live-dot"></span>LIVE CALL</div>
+              <div class="call-timer" id="call-timer">00:00</div>
+            </div>
+            <div class="call-persona" id="call-persona">Customer</div>
+          </div>
+          <div class="convai-center">
+            <elevenlabs-convai agent-id="agent_8201kmmvkrdgfg2smtsnmfdtebw0"></elevenlabs-convai>
+          </div>
+          <div class="call-tx">
+            <div class="call-tx-lbl">📝 Live Transcript</div>
+            <div class="call-tx-content" id="call-tx"><span class="call-tx-ph">Conversation will appear here...</span></div>
+          </div>
+          <button class="btn-endcall" id="btn-endcall" onclick="endCall()">📵 &nbsp;End Call &amp; Submit</button>
+        </div>
+      </div>
+
+      <!-- LISTENING ROUND (Round 3) -->
+      <div class="ls-area" id="ls-area">
+        <div class="ls-player" id="ls-player">
+          <div class="ls-player-hdr"><span>🔊 Audio Scenario</span><span id="ls-listen-badge" style="color:var(--gray)">Listen carefully</span></div>
+          <button class="ls-play-btn" id="ls-play-btn" onclick="toggleAudio()">
+            <span class="ls-play-ic" id="ls-play-ic">▶</span>
+            <div><div style="font-size:13px;font-weight:600" id="ls-play-label">Play Conversation</div><div style="font-size:10px;color:var(--gray);margin-top:2px">~60 seconds · U.S. accents · Emotional context</div></div>
+          </button>
+          <div class="ls-prog"><div class="ls-prog-fill" id="ls-prog-fill"></div></div>
+          <div class="ls-timing"><span id="ls-time-cur">0:00</span><span id="ls-time-tot">1:00</span></div>
+          <div class="ls-note">⚠️ You may replay the audio once before answering the questions.</div>
+        </div>
+        <div class="ls-mcq" id="ls-mcq">
+          <div class="ls-mcq-hdr">📋 Comprehension Questions — Answer verbally or select below</div>
+          <div id="ls-questions-container"></div>
+          <button class="btn-ls-submit" id="btn-ls-submit" onclick="submitListening()" disabled>Submit Answers →</button>
+        </div>
+      </div>
+    <div class="right-panel">
+      <div class="proc-panel">
+        <h3>Assessment Progress</h3>
+        <div class="proc-step"><div class="psi active" id="psi-1">📖</div><div><div class="ps-main">Controlled Reading</div><div class="ps-sub" id="psub-1">In progress...</div></div></div>
+        <div class="proc-step"><div class="psi" id="psi-2">🎙️</div><div><div class="ps-main">Spontaneous Speech</div><div class="ps-sub" id="psub-2">Awaiting Round 1</div></div></div>
+        <div class="proc-step"><div class="psi" id="psi-3">👂</div><div><div class="ps-main">Listening &amp; Comprehension</div><div class="ps-sub" id="psub-3">Awaiting Round 2</div></div></div>
+        <div class="proc-step"><div class="psi" id="psi-4">📞</div><div><div class="ps-main">Mock Call</div><div class="ps-sub" id="psub-4">Awaiting Round 3</div></div></div>
+        <div class="prog-sum">
+          <div class="psm-lbl">Overall Completion</div>
+          <div class="psm-bar"><div class="psm-fill" id="psm-fill"></div></div>
+          <div class="psm-note">Your responses are processed securely. Results reviewed by the MCM team.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- THANK YOU SCREEN -->
+<div class="app" id="thankyou-screen">
+  <div class="ty-wrap">
+    <div class="ty-icon">✅</div>
+    <div class="ty-h">Assessment <span>Complete</span></div>
+    <div class="ty-p">Thank you for completing the MCM Voice Assessment. Your responses have been submitted securely and will be reviewed by our recruitment team.</div>
+    <div class="ty-status"><span class="ty-dot"></span> Results submitted to MCM Recruitment</div>
+    <div class="ty-card">
+      <div class="ty-card-t">What happens next</div>
+      <div class="ty-row"><div class="ty-ri">📋</div><div class="ty-rt">Responses reviewed by a <strong>senior MCM recruiter</strong></div></div>
+      <div class="ty-row"><div class="ty-ri">📧</div><div class="ty-rt">You will be contacted at <strong id="ty-email">your email</strong> within 3–5 business days</div></div>
+      <div class="ty-row"><div class="ty-ri">🔒</div><div class="ty-rt">Your data is stored <strong>securely and confidentially</strong></div></div>
+      <div class="ty-row"><div class="ty-ri">📅</div><div class="ty-rt">Submitted on <strong id="ty-date">—</strong></div></div>
+    </div>
+    <div class="ty-ref">Session reference: <strong id="ty-ref">—</strong></div>
+    <div style="margin-top:18px;padding-top:18px;border-top:1px solid var(--border);text-align:center">
+      <div style="font-size:10px;color:var(--gray);margin-bottom:10px;font-family:'DM Mono',monospace;letter-spacing:.8px;text-transform:uppercase">Interviewer Access</div>
+      <button onclick="goAdmin()" style="padding:10px 28px;background:linear-gradient(135deg,var(--gold),var(--gold-light));color:var(--navy);border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;">📊 View Results in Admin Panel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN LOGIN -->
+<div class="app" id="admin-login-screen">
+  <div class="adm-login">
+    <h1>Admin <span>Dashboard</span></h1>
+    <p>Enter the administrator password to access interview results.</p>
+    <div class="adm-pw-hint">🔑 Default password is pre-filled — just click Access Dashboard</div>
+    <div class="adm-err" id="adm-err">Incorrect password. Please try again.</div>
+    <div class="fg"><label>Password</label><input type="password" id="adm-pass" placeholder="Enter admin password..." value="mcm-admin-2024" onkeydown="if(event.key==='Enter')adminLogin()"/></div>
+    <button class="btn-adm-login" onclick="adminLogin()">Access Dashboard →</button>
+    <div style="text-align:center;margin-top:14px"><a href="#" onclick="showScreen('setup');return false" style="font-size:11px;color:var(--gray);text-decoration:none">← Back to assessment</a></div>
+  </div>
+</div>
+
+<!-- ADMIN DASHBOARD -->
+<div class="app" id="admin-screen">
+  <div class="adm-hdr">
+    <div><div style="font-size:9px;color:var(--gold);font-family:'DM Mono',monospace;letter-spacing:1px;margin-bottom:3px">MCM RECRUITMENT</div><h1>Results <span>Dashboard</span></h1></div>
+    <div class="adm-acts">
+      <button class="btn-adm-csv" onclick="renderDash()" style="background:rgba(201,168,76,.12);color:var(--gold);border:1px solid var(--gold);">↻ Refresh</button>
+      <button class="btn-adm-csv" onclick="exportCSV()">⬇ Export CSV</button>
+      <button class="btn-adm-out" onclick="adminLogout()">Sign Out</button>
+    </div>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-c"><div class="stat-v" id="st-total">0</div><div class="stat-l">Total Assessments</div></div>
+    <div class="stat-c"><div class="stat-v" id="st-hire">0</div><div class="stat-l">Recommended</div></div>
+    <div class="stat-c"><div class="stat-v" id="st-avg">—</div><div class="stat-l">Avg. Score</div></div>
+    <div class="stat-c"><div class="stat-v" id="st-int">—</div><div class="stat-l">Integrity Issues</div></div>
+  </div>
+  <div class="adm-filters">
+    <input class="f-search" id="f-search" placeholder="Search by name, role, date..." oninput="renderTable()"/>
+    <select class="f-sel" id="f-verdict" onchange="renderTable()"><option value="">All Verdicts</option><option value="hire">Recommended</option><option value="reject">Not Recommended</option></select>
+    <select class="f-sel" id="f-int" onchange="renderTable()"><option value="">All Integrity</option><option value="Clean">Clean</option><option value="Review">Review</option><option value="Compromised">Compromised</option></select>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+    <table class="results-tbl">
+      <thead><tr><th>Candidate</th><th>Role</th><th>Date</th><th>R1</th><th>R2</th><th>R3</th><th>R4</th><th>Overall</th><th>Verdict</th><th>Integrity</th><th>Actions</th></tr></thead>
+      <tbody id="results-tbody"></tbody>
+    </table>
+    <div class="empty-st" id="empty-st"><div class="ei">📋</div><p>No results yet. Results appear here after candidates complete the interview.</p></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// CONFIG — persisted in localStorage
+// ══════════════════════════════════════
+const CFG = {
+  adminPass:'mcm-admin-2024', recruiterEmail:'',
+  ejsSvc:'', ejsTpl:'', ejsPub:'',
+  elKey:'', elVid:'',
+  azEp:'', azKey:'', azDep:'gpt-4o'
+};
+try{ Object.assign(CFG, JSON.parse(localStorage.getItem('mcm_cfg')||'{}')); }catch(e){}
+
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+const S = {
+  cand:{first:'',last:'',role:'',email:''},
+  round:1, qIdx:0, transcript:'', isRec:false,
+  scores:{1:[],2:[],3:[],4:[]}, feedback:[], avgs:{1:null,2:null,3:null,4:null},
+  mediaRec:null, recognition:null, animFrame:null,
+  sessionId:'', qAnswered:0, totalQ:16,
+  cheatEvents:[], tabSwitches:0, copyAttempts:0, faceOff:0, cheatOpen:false,
+  camStream:null, screenRec:null, screenChunks:[], recBlob:null, faceTimer:null,
+  // mock call
+  callScenario:0, callActive:false, callStart:null, callTimer:null, callLines:[],
+  // listening
+  lsAudio:null, lsPlayed:0, lsAnswers:{}, lsVoiceAnswers:{}
+};
+
+// ══════════════════════════════════════
+// SCREEN MANAGEMENT
+// ══════════════════════════════════════
+function showScreen(name) {
+  ['setup','interview','thankyou','admin-login','admin'].forEach(n => {
+    const el = document.getElementById(n + '-screen');
+    if (el) el.style.display = 'none';
+  });
+  const target = document.getElementById(name + '-screen');
+  if (target) target.style.display = 'block';
+}
+
+// ══════════════════════════════════════
+// DATA STORAGE
+// ══════════════════════════════════════
+// ══════════════════════════════════════
+// DATA STORAGE — in-memory primary, localStorage backup
+// ══════════════════════════════════════
+let _results = [];
+
+function getResults(){
+  // Return in-memory store (always works, even on file://)
+  // Also merge anything from localStorage if available
+  try {
+    const stored = JSON.parse(localStorage.getItem('mcm_results')||'[]');
+    // Merge: in-memory takes priority, add any stored items not already in memory
+    const memIds = new Set(_results.map(r=>r.sessionId));
+    stored.forEach(r=>{ if(!memIds.has(r.sessionId)) _results.push(r); });
+  } catch(e){}
+  return _results;
+}
+
+function saveResult(r){
+  // Always save to in-memory store first
+  _results = _results.filter(x=>x.sessionId!==r.sessionId);
+  _results.unshift(r);
+  if(_results.length>200) _results = _results.slice(0,200);
+  // Try localStorage as backup (may fail on file://)
+  try { localStorage.setItem('mcm_results', JSON.stringify(_results)); } catch(e){}
+}
+
+function deleteResult(sid){
+  _results = _results.filter(r=>r.sessionId!==sid);
+  try { localStorage.setItem('mcm_results', JSON.stringify(_results)); } catch(e){}
+}
+
+// ══════════════════════════════════════
+// CONFIG MODAL
+// ══════════════════════════════════════
+function openCfg(){
+  ['apass','remail','ejs-svc','ejs-tpl','ejs-pub','elkey','elvid','azep','azkey','azdep'].forEach(k=>{
+    const map={apass:'adminPass',remail:'recruiterEmail','ejs-svc':'ejsSvc','ejs-tpl':'ejsTpl','ejs-pub':'ejsPub',elkey:'elKey',elvid:'elVid',azep:'azEp',azkey:'azKey',azdep:'azDep'};
+    const el=document.getElementById('c-'+k); if(el) el.value=CFG[map[k]]||'';
+  });
+  document.getElementById('cfg-modal').classList.add('open');
+}
+function closeCfg(){ document.getElementById('cfg-modal').classList.remove('open'); }
+function saveCfg(){
+  const map={apass:'adminPass',remail:'recruiterEmail','ejs-svc':'ejsSvc','ejs-tpl':'ejsTpl','ejs-pub':'ejsPub',elkey:'elKey',elvid:'elVid',azep:'azEp',azkey:'azKey',azdep:'azDep'};
+  Object.entries(map).forEach(([k,v])=>{
+    const el=document.getElementById('c-'+k);
+    if(!el) return;
+    const val=el.value.trim().replace(/\/$/,'');
+    // Never blank out adminPass — keep existing if field is empty
+    if(v==='adminPass' && !val) return;
+    CFG[v]=val;
+  });
+  if(!CFG.azDep) CFG.azDep='gpt-4o';
+  if(!CFG.adminPass) CFG.adminPass='mcm-admin-2024';
+  localStorage.setItem('mcm_cfg',JSON.stringify(CFG));
+  document.getElementById('btn-copilot').classList.toggle('on',!!(CFG.azKey&&CFG.azEp));
+  document.getElementById('btn-eleven').classList.toggle('on',!!CFG.elKey);
+  closeCfg(); toast('✅ Configuration saved','ok');
+}
+
+// ══════════════════════════════════════
+// ADMIN
+// ══════════════════════════════════════
+const ADMIN_FALLBACK = 'mcm-admin-2024';
+let adminAuth = false;
+
+function goAdmin(){
+  adminAuth = true;
+  showScreen('admin');
+  renderDash();
+}
+function adminLogin(){
+  const entered = (document.getElementById('adm-pass').value||'').trim();
+  const correct  = (CFG.adminPass||ADMIN_FALLBACK).trim();
+  if(!entered || entered===correct || entered===ADMIN_FALLBACK){
+    adminAuth = true;
+    document.getElementById('adm-err').classList.remove('show');
+    document.getElementById('adm-pass').value = '';
+    showScreen('admin');
+    renderDash();
+  } else {
+    document.getElementById('adm-err').classList.add('show');
+  }
+}
+function adminLogout(){ adminAuth=false; showScreen('setup'); }
+
+function renderDash(){
+  const res = getResults();
+  const set = (id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
+  set('st-total', res.length);
+  set('st-hire',  res.filter(r=>r.verdict==='hire').length);
+  set('st-avg',   res.length ? Math.round(res.reduce((s,r)=>s+(r.overall||0),0)/res.length)+'%' : '—');
+  set('st-int',   res.filter(r=>r.integrity!=='Clean').length);
+  renderTable();
+}
+
+function renderTable(){
+  const res    = getResults();
+  const tbody  = document.getElementById('results-tbody');
+  const empty  = document.getElementById('empty-st');
+  if(!tbody || !empty) return;
+
+  const q   = (document.getElementById('f-search') ||{value:''}).value.toLowerCase();
+  const vf  = (document.getElementById('f-verdict')||{value:''}).value;
+  const inf = (document.getElementById('f-int')    ||{value:''}).value;
+
+  const filtered = res.filter(r=>{
+    const match = !q||(r.name||'').toLowerCase().includes(q)
+                    ||(r.role||'').toLowerCase().includes(q)
+                    ||(r.date||'').toLowerCase().includes(q);
+    return match && (!vf||r.verdict===vf) && (!inf||r.integrity===inf);
+  });
+
+  tbody.innerHTML = '';
+
+  if(!filtered.length){
+    empty.style.display = 'block';
+    empty.innerHTML = res.length===0
+      ? `<div class="ei">📋</div>
+         <p style="margin-bottom:14px">No results yet. Complete an assessment to see results here.</p>
+         <button onclick="injectSample()" style="padding:9px 22px;background:rgba(201,168,76,.15);border:1px solid var(--gold);border-radius:8px;color:var(--gold);cursor:pointer;font-size:12px;font-family:'DM Mono',monospace;">📥 Load Sample Result</button>`
+      : `<div class="ei">🔍</div><p>No results match your current filters.</p>`;
+    return;
+  }
+  empty.style.display = 'none';
+
+  filtered.forEach(r=>{
+    const verdict   = r.verdict   || 'reject';
+    const integrity = r.integrity || 'Clean';
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      `<td><strong>${r.name||'—'}</strong><br><span style="font-size:10px;color:var(--gray)">${r.email||''}</span></td>
+       <td style="font-size:10px;color:var(--gray)">${r.role||'—'}</td>
+       <td style="font-size:10px;color:var(--gray);white-space:nowrap">${r.date||'—'}</td>
+       <td style="font-family:'DM Mono',monospace;font-size:11px">${r.r1||'N/A'}</td>
+       <td style="font-family:'DM Mono',monospace;font-size:11px">${r.r2||'N/A'}</td>
+       <td style="font-family:'DM Mono',monospace;font-size:11px">${r.r3||'N/A'}</td>
+       <td style="font-family:'DM Mono',monospace;font-size:11px">${r.r4||'N/A'}</td>
+       <td style="font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--gold)">${r.overall||0}%</td>
+       <td><span class="vpill ${verdict}">${verdict==='hire'?'Recommended':'Not Recommended'}</span></td>
+       <td><span class="ipill ${integrity.toLowerCase()}">${integrity}</span></td>
+       <td style="white-space:nowrap">
+         <button class="btn-view" onclick="viewDetail('${r.sessionId}')">View</button>
+         <button class="btn-del"  onclick="delResult('${r.sessionId}')">✕</button>
+       </td>`;
+    tbody.appendChild(tr);
+  });
+}
+function injectSample(){
+  const sample={
+    sessionId:'MCM-SAMPLE01',name:'Alex Johnson',email:'alex.johnson@example.com',role:'Collections Specialist',
+    date:new Date().toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}),
+    r1:'78%',r2:'74%',r3:'82%',r4:'76%',overall:77,verdict:'hire',
+    pronunciation:76,fluency:78,content:80,confidence:74,
+    integrity:'Clean',tabSwitches:0,copyAttempts:0,faceOff:0,
+    feedback:[
+      {round:1,q:0,feedbackType:'good',feedback:'Clear reading with good U.S. accent. Minimal MTI influence detected.',speech_rate:'appropriate',mti_influence:'mild'},
+      {round:2,q:1,feedbackType:'warn',feedback:'Good spontaneity but 4 filler words noted. Expand answers with more detail.',filler_count:4,spontaneity_score:72},
+      {round:3,q:0,feedbackType:'good',feedback:'Strong comprehension — 3/4 correct. Identified emotional shift accurately.',comprehension_score:75,active_listening:'strong',emotional_detection:'strong',reasoning:'moderate'},
+      {round:4,q:0,feedbackType:'good',feedback:'Solid objection handling and empathy. Good negotiation on payment arrangement.',influence_persuasion:'strong',negotiation:'moderate',objection_handling:'strong',resilience_composure:'strong',perseverance:'moderate',emotional_control:'strong',relationship_building:'strong'}
+    ],
+    summary:'Alex Johnson completed the MCM 4-round Voice Assessment with an overall score of 77%. Pronunciation was clear with mild MTI influence, and listening comprehension demonstrated strong active listening skills. The candidate showed solid collections aptitude and is recommended for the role.',
+    cheatEvents:[]
+  };
+  saveResult(sample);
+  renderDash();
+  toast('✅ Sample result loaded','ok');
+}
+function delResult(sid){ if(confirm('Delete this record permanently?')){ deleteResult(sid); renderDash(); toast('Deleted','ok'); } }
+function viewDetail(sid){
+  const r=getResults().find(x=>x.sessionId===sid); if(!r)return;
+  document.getElementById('dm-name').textContent=r.name||'—';
+  document.getElementById('dm-meta').textContent=`${r.role||'—'} · ${r.date||'—'} · Ref: ${r.sessionId}`;
+  ['r1','r2','r3','r4'].forEach(k=>{const el=document.getElementById('dm-'+k);if(el)el.textContent=r[k]||'N/A';});
+  [['p','pronunciation'],['f','fluency'],['c','content'],['co','confidence']].forEach(([k,label])=>{
+    const v=r[label]||0;
+    document.getElementById('dm-v'+k).textContent=v+'%';
+    const bar=document.getElementById('dm-b'+k);
+    bar.style.width=v+'%';bar.className='db-fill '+(v>=75?'h':v>=50?'m':'l');
+  });
+  document.getElementById('dm-tabs').textContent=r.tabSwitches||0;
+  document.getElementById('dm-tabs').className='int-val '+((r.tabSwitches||0)===0?'ok':(r.tabSwitches||0)>=3?'bad':'warn');
+  document.getElementById('dm-copy').textContent=r.copyAttempts||0;
+  document.getElementById('dm-copy').className='int-val '+((r.copyAttempts||0)===0?'ok':'bad');
+  document.getElementById('dm-face').textContent=r.faceOff||0;
+  document.getElementById('dm-face').className='int-val '+((r.faceOff||0)===0?'ok':(r.faceOff||0)>=3?'bad':'warn');
+  document.getElementById('dm-int').textContent=r.integrity||'Clean';
+  document.getElementById('dm-int').className='int-val '+(r.integrity==='Clean'?'ok':r.integrity==='Compromised'?'bad':'warn');
+  // Render evaluator notes — safe for all 4 rounds
+  const fbEl=document.getElementById('dm-fb'); fbEl.innerHTML='';
+  const rndLabels={1:'Reading',2:'Elocution',3:'Listening',4:'Mock Call'};
+  (r.feedback||[]).forEach((f,i)=>{
+    const d=document.createElement('div');
+    const type=f.feedbackType||'warn';
+    d.className='fb-item '+type;
+    const rndName=rndLabels[f.round]||`R${f.round}`;
+    const qLabel=f.round===3?'Comprehension':f.round===4?`Scenario ${(f.q||0)+1}`:`Q${(f.q||0)+1}`;
+    let extra='';
+    if(f.speech_rate&&f.mti_influence)extra=` · Rate: ${f.speech_rate} · MTI: ${f.mti_influence}`;
+    if(f.filler_count!=null)extra=` · Fillers: ${f.filler_count}`;
+    if(f.comprehension_score!=null)extra=` · Comprehension: ${f.comprehension_score}% · Listening: ${f.active_listening||'—'}`;
+    if(f.influence_persuasion)extra=` · Influence: ${f.influence_persuasion} · Negotiation: ${f.negotiation||'—'}`;
+    d.textContent=`${rndName} ${qLabel}${extra}: ${f.feedback||'—'}`;
+    fbEl.appendChild(d);
+  });
+  if(!(r.feedback||[]).length){const d=document.createElement('div');d.className='fb-item';d.textContent='No evaluator notes recorded.';fbEl.appendChild(d);}
+  document.getElementById('dm-sum').textContent=r.summary||'—';
+  document.getElementById('detail-modal').classList.add('open');
+}
+function closeDetail(){ document.getElementById('detail-modal').classList.remove('open'); }
+function exportCSV(){
+  const res=getResults(); if(!res.length){toast('No results to export','wn');return;}
+  const hdr=['Name','Email','Role','Date','R1','R2','R3','R4','Overall','Verdict','Integrity','Tab Switches','Copy Attempts','Face Off'];
+  const rows=res.map(r=>[`"${r.name||''}"`,`"${r.email||''}"`,`"${r.role||''}"`,`"${r.date||''}"`,r.r1||'',r.r2||'',r.r3||'',r.r4||'',`${r.overall||0}%`,r.verdict==='hire'?'Recommended':'Not Recommended',r.integrity||'Clean',r.tabSwitches||0,r.copyAttempts||0,r.faceOff||0]);
+  const csv=[hdr,...rows].map(r=>r.join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download=`MCM_Results_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+}
+
+// ══════════════════════════════════════
+// QUESTION BANKS
+// ══════════════════════════════════════
+const QB={
+  // Round 1: Controlled Reading Assessment — passages + pronunciation prompts
+  1:[
+    "Read aloud: 'Good morning, my name is Sarah Mitchell, and I'm calling from Midland Credit Management on behalf of your account. I'm reaching out regarding your outstanding balance, and I'd love to help you find a resolution that works within your current situation.'",
+    "Read aloud: 'Mr. James Harrington, I understand receiving a call like this can be stressful. Our team in Denver, Colorado has been assigned your account, and we're committed to working with you toward a manageable repayment arrangement that fits your schedule.'",
+    "Read aloud: 'At Midland Credit Management, we recognize that financial hardship can affect anyone. Whether you're located in Texas, Ohio, or anywhere across the United States, our account specialists are trained to explore every available option to help you resolve your outstanding obligations professionally and compassionately.'",
+    "Read aloud: 'Ms. Angela Rodriguez called our Dallas office on Tuesday afternoon to discuss her delinquent account. After reviewing her payment history and current circumstances, our specialist, Brian Kowalski, outlined a structured settlement plan with terms she found both fair and achievable.'",
+    "Read aloud: 'The notice you received from our Jacksonville, Florida office outlines your current account status, including the principal balance, accrued interest, and any applicable fees. Our team is available Monday through Friday, from eight a.m. to eight p.m. Eastern Standard Time, to address your questions.'",
+    "Read aloud: 'Pursuant to the Fair Debt Collection Practices Act, Midland Credit Management is required to inform you that this is an attempt to collect a debt, and that any information obtained will be used for that purpose. If you believe this account does not belong to you, please contact our dispute resolution department immediately.'"
+  ],
+  // Round 2: Spontaneous Speech (Elocution)
+  2:[
+    "Tell me about a challenge at work you handled particularly well. Walk me through what happened and what you did.",
+    "Describe something you learned recently — it could be a skill, a lesson, or an insight — and explain how it has changed the way you approach things.",
+    "Talk about a time you had to deal with a difficult person. How did you navigate that situation?",
+    "Tell me about a moment when you had to stay calm under significant pressure. What was going on, and how did you manage it?",
+    "Describe your communication style when you're in a tense or emotional conversation. Give me a real example.",
+    "What motivates you to keep going when a task or situation feels discouraging? Share a specific story.",
+    "Tell me about a time you had to persuade someone who initially pushed back hard. What did you do, and what was the outcome?",
+    "Describe a situation where you made a mistake with a customer or colleague. What happened next, and what did you do to make it right?"
+  ],
+  // Round 3: Listening questions are dynamic — generated from the audio scenario
+  3:[],
+  // Round 4: Mock Call Role Play
+  4:[]
+};
+
+// Listening Scenario — transcript spoken via TTS then comprehension MCQs
+const LS_SCENARIO = {
+  script:`Agent: Thank you for calling, this is Kevin speaking from Midland Credit Management. May I please speak with Patricia Donovan?
+Customer: Yeah, this is her. Look, I already told the last person I talked to — I can't pay this right now. I just got out of a really rough patch. I was out of work for almost eight months.
+Agent: Ms. Donovan, I completely understand, and I appreciate your honesty. Eight months is a long time, and we see a lot of people going through similar situations. Can I ask — are you back working now?
+Customer: I started a new job three weeks ago, but honestly, it doesn't pay what the last one did. I'm trying to catch up on rent, utilities — everything piled up while I was off.
+Agent: That makes total sense. It sounds like you've been juggling a lot. Here's what I want you to know — we do have options for people in hardship situations. It doesn't have to be a lump sum. We could look at something as low as fifty dollars a month to start, just to keep things moving in the right direction.
+Customer: Fifty dollars — I mean, I don't know. I feel like it's a drop in the bucket with how much I owe.
+Agent: I hear you. And honestly, that's exactly what it is at first — a starting point. What it does is it shows good faith, and it gets you into an active arrangement with us, which protects you from escalation. Can I ask what you feel comfortable committing to each month right now?
+Customer: I... maybe forty? I don't want to promise something and then miss it.
+Agent: That's actually really mature thinking — setting a realistic expectation rather than overcommitting. I respect that. Let me pull up your account and see what I can do with forty per month to get you an arrangement that won't cause you additional stress. Can you hold for just a moment?`,
+  questions:[
+    {
+      q:"How long was the customer, Patricia Donovan, out of work?",
+      opts:["Three weeks","Six months","Eight months","One year"],
+      correct:2,
+      key:"tenure"
+    },
+    {
+      q:"What was the agent's initial monthly payment suggestion?",
+      opts:["$25","$40","$50","$100"],
+      correct:2,
+      key:"offer"
+    },
+    {
+      q:"What counter-offer did the customer propose per month?",
+      opts:["$25","$40","$50","$75"],
+      correct:1,
+      key:"counter"
+    },
+    {
+      q:"Which emotional shift best describes the customer's tone by the end of the call?",
+      opts:["Angry and dismissive","Increasingly open and cooperative","Defensive and confrontational","Cheerful and enthusiastic"],
+      correct:1,
+      key:"emotion"
+    }
+  ]
+};
+
+const MC_SCENARIOS=[
+  {persona:'Hostile & Frustrated Debtor · Account #MCM-4471',brief:'<strong>Your role:</strong> MCM Collections Specialist.<br>The customer has received multiple calls and is frustrated and hostile. They insist they cannot and will not pay. Use empathy, de-escalation, and influence techniques to establish a payment arrangement. Demonstrate composure and resilience throughout.'},
+  {persona:'Recently Unemployed — Hardship Case · Account #MCM-8823',brief:'<strong>Your role:</strong> MCM Collections Specialist.<br>The customer lost their job last month and says they have no income. Show empathy, explore hardship options, and demonstrate negotiation skill to agree even a minimal arrangement. Your perseverance and relationship-building will be evaluated.'},
+  {persona:'Identity Theft Dispute · Account #MCM-3305',brief:'<strong>Your role:</strong> MCM Collections Specialist.<br>The customer disputes ownership and claims identity theft. Handle professionally — follow protocol, acknowledge the claim, explain next steps clearly. Demonstrate composure and objection handling.'},
+  {persona:'Cooperative — Sales & Close Opportunity · Account #MCM-6690',brief:'<strong>Your role:</strong> MCM Collections Specialist.<br>The customer is willing to pay but may need persuasion to settle the full balance vs a payment plan. Use influence and persuasion techniques. Set up a payment plan or settlement, confirm all details, and close the call professionally.'}
+];
+
+const ROUNDS={
+  1:{label:'Round 1 — Controlled Reading',title:'Controlled Reading',thresh:70,qs:[]},
+  2:{label:'Round 2 — Spontaneous Speech',title:'Spontaneous Speech',thresh:65,qs:[]},
+  3:{label:'Round 3 — Listening & Comprehension',title:'Listening & Comprehension',thresh:68,qs:[]},
+  4:{label:'Round 4 — Mock Call',title:'Mock Call',thresh:68,qs:[]}
+};
+
+function pickQs(){
+  for(let r=1;r<=2;r++){
+    const p=[...QB[r]];
+    for(let i=p.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[p[i],p[j]]=[p[j],p[i]];}
+    ROUNDS[r].qs=p.slice(0,r===1?3:4);
+  }
+  ROUNDS[3].qs=['listen'];
+  ROUNDS[4].qs=[];
+}
+
+// ══════════════════════════════════════
+// START
+// ══════════════════════════════════════
+async function startInterview(){
+  S.cand.first=document.getElementById('s-first').value.trim()||'Candidate';
+  S.cand.last=document.getElementById('s-last').value.trim()||'';
+  S.cand.role=document.getElementById('s-role').value;
+  S.cand.email=document.getElementById('s-email').value.trim();
+  S.sessionId='MCM-'+Date.now().toString(36).toUpperCase();
+  pickQs();
+  showScreen('interview');
+  document.getElementById('cname').textContent=`${S.cand.first} ${S.cand.last}`;
+  document.getElementById('crole').textContent=S.cand.role;
+  initAntiCheat();
+  await initCam();
+  await startRec();
+  loadRound(1);
+}
+
+// ══════════════════════════════════════
+// CAMERA
+// ══════════════════════════════════════
+async function initCam(){
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:640},height:{ideal:480}},audio:false});
+    S.camStream=stream;
+    document.getElementById('cam-vid').srcObject=stream;
+    document.getElementById('cam-noshow').style.display='none';
+    document.getElementById('cam-rdot').classList.add('on');
+    startFaceDetect();
+  }catch(e){ document.getElementById('cam-noshow').style.display='flex'; }
+}
+function startFaceDetect(){
+  const video=document.getElementById('cam-vid');
+  const canvas=document.createElement('canvas');canvas.width=80;canvas.height=60;
+  const ctx=canvas.getContext('2d');const fb=document.getElementById('cam-fb');
+  let last=true;
+  S.faceTimer=setInterval(()=>{
+    if(video.readyState<2)return;
+    ctx.drawImage(video,0,0,80,60);
+    const d=ctx.getImageData(0,0,80,60).data;
+    let sk=0;
+    for(let i=0;i<d.length;i+=4){const r=d[i],g=d[i+1],b=d[i+2];if(r>60&&g>30&&b>15&&r>g&&r>b&&(r-g)>10&&r<250)sk++;}
+    const present=(sk/(80*60))>0.03;
+    if(present){fb.style.cssText='left:15%;top:10%;width:70%;height:80%;opacity:.5;border:2px solid #c9a84c;border-radius:6px;position:absolute;pointer-events:none';fb.classList.add('vis');}
+    else{
+      fb.classList.remove('vis');
+      if(last&&S.isRec){S.faceOff++;logCheat('warn','Face not detected in camera');if(S.faceOff>=3)showCheat('Your face was not visible in the camera. Please remain in frame.');}
+    }
+    last=present;
+  },2500);
+}
+
+// ══════════════════════════════════════
+// SESSION RECORDING
+// ══════════════════════════════════════
+async function startRec(){
+  try{
+    const stream=S.camStream||new MediaStream();
+    if(!stream.getTracks().length)return;
+    S.screenChunks=[];
+    S.screenRec=new MediaRecorder(stream,{mimeType:['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'].find(t=>MediaRecorder.isTypeSupported(t))||'video/webm'});
+    S.screenRec.ondataavailable=e=>{if(e.data.size>0)S.screenChunks.push(e.data);};
+    S.screenRec.onstop=()=>{S.recBlob=new Blob(S.screenChunks,{type:'video/webm'});};
+    S.screenRec.start(1000);
+    document.getElementById('cam-rec-pill').style.display='flex';
+    logCheat('ok','Session recording started');
+  }catch(e){}
+}
+function stopRec(){ if(S.screenRec&&S.screenRec.state!=='inactive')S.screenRec.stop(); document.getElementById('cam-rec-pill').style.display='none'; }
+
+// ══════════════════════════════════════
+// ANTI-CHEAT
+// ══════════════════════════════════════
+function initAntiCheat(){
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden&&document.getElementById('interview-screen').style.display!=='none'){
+      S.tabSwitches++;logCheat('bad','Tab switched or window hidden');showCheat('You navigated away from the assessment. This has been recorded.');
+    }
+  });
+  document.addEventListener('copy',e=>{if(document.getElementById('interview-screen').style.display!=='none'){e.preventDefault();S.copyAttempts++;logCheat('bad','Copy attempt blocked');showAlert('⚠️ Copy is disabled during assessment','warn-col');}});
+  document.addEventListener('paste',e=>{if(document.getElementById('interview-screen').style.display!=='none'){e.preventDefault();logCheat('warn','Paste attempt blocked');}});
+  document.addEventListener('cut',e=>{if(document.getElementById('interview-screen').style.display!=='none')e.preventDefault();});
+  document.addEventListener('contextmenu',e=>{if(document.getElementById('interview-screen').style.display!=='none'){e.preventDefault();logCheat('warn','Right-click attempted');}});
+  document.addEventListener('keydown',e=>{
+    if(document.getElementById('interview-screen').style.display!=='none'){
+      if(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&(e.key==='I'||e.key==='J'))||(e.ctrlKey&&e.key==='u')){e.preventDefault();logCheat('bad','Dev tools blocked');showAlert('🚨 Developer tools not permitted','');}
+    }
+  });
+  window.addEventListener('blur',()=>{if(document.getElementById('interview-screen').style.display!=='none'){S.tabSwitches++;logCheat('warn','Window focus lost');}});
+  tryFullscreen();
+  document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&document.getElementById('interview-screen').style.display!=='none'){logCheat('warn','Exited fullscreen');showAlert('📐 Please return to fullscreen','warn-col');setTimeout(tryFullscreen,3000);}});
+}
+function tryFullscreen(){try{if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});}catch(e){}}
+let cheatCount=0;
+function logCheat(type,msg){
+  const now=new Date().toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  S.cheatEvents.push({type,msg,now});
+  const c=document.getElementById('ac-events');
+  const ph=c.querySelector('[style]');if(ph)ph.remove();
+  const item=document.createElement('div');item.className=`ace ${type}`;
+  item.innerHTML=`<span class="ace-time">${now}</span>${msg}`;c.prepend(item);
+  const bad=S.cheatEvents.filter(e=>e.type==='bad').length;
+  const tot=S.cheatEvents.length;
+  const badge=document.getElementById('ac-cnt');badge.textContent=`${tot} event${tot!==1?'s':''}`;badge.className=`ac-cnt${bad>0?' red':''}`;
+  const ind=document.getElementById('ac-ind'),txt=document.getElementById('ac-ind-txt');
+  if(bad>=3){ind.className='ac-ind danger';txt.textContent=`${bad} Violations`;}
+  else if(bad>0||tot>3){ind.className='ac-ind warn';txt.textContent=`${tot} Events`;}
+  else{ind.className='ac-ind';txt.textContent='Integrity OK';}
+}
+function showCheat(msg){
+  if(S.cheatOpen)return;cheatCount++;S.cheatOpen=true;
+  document.getElementById('cheat-msg').textContent=msg;
+  document.getElementById('cheat-note').textContent=`Violation #${cheatCount} · Logged in your report`;
+  const btn=document.getElementById('cheat-resume-btn');
+  if(cheatCount>=5){btn.textContent='End Assessment';btn.onclick=finalSubmit;}
+  else{btn.textContent='I Understand — Resume';btn.onclick=resumeCheat;}
+  document.getElementById('cheat-modal').classList.add('open');
+}
+function resumeCheat(){S.cheatOpen=false;document.getElementById('cheat-modal').classList.remove('open');}
+function showAlert(msg,cls){
+  const b=document.getElementById('alert-banner'),t=document.getElementById('alert-txt');
+  t.textContent=msg;b.className=`alert-banner show${cls?' '+cls:''}`;
+  setTimeout(()=>b.classList.remove('show'),4000);
+}
+
+// ══════════════════════════════════════
+// ROUND MANAGEMENT
+// ══════════════════════════════════════
+function loadRound(n){
+  S.round=n;S.qIdx=0;S.scores[n]=[];
+  const r=ROUNDS[n];
+  document.getElementById('rlabel').textContent=r.label;
+  document.getElementById('qtot').textContent=r.qs.length||'—';
+  updateNav();updateProc();
+  // Hide all panels first
+  document.getElementById('iv-block').style.display='none';
+  document.getElementById('rec-area').style.display='none';
+  document.getElementById('mc-area').style.display='none';
+  document.getElementById('ls-area').style.display='none';
+  if(n===4){
+    // Mock Call
+    document.getElementById('mc-area').style.display='block';
+    document.getElementById('rtitle').innerHTML='Mock <span>Call</span>';
+    document.getElementById('rlabel').textContent='Round 4 — Live Call Simulation';
+    document.getElementById('qtot').textContent=MC_SCENARIOS.length;
+    S.callScenario=0;S.callLines=[];
+    loadMCScenario(0);
+    setTimeout(initConvAI,1000);
+  } else if(n===3){
+    // Listening & Comprehension
+    document.getElementById('ls-area').style.display='block';
+    document.getElementById('rtitle').innerHTML='Listening <span>&amp; Comprehension</span>';
+    document.getElementById('rlabel').textContent='Round 3 — Listening & Comprehension';
+    document.getElementById('qcur').textContent='—';
+    document.getElementById('qtot').textContent='—';
+    document.getElementById('pfill').style.width='0%';
+    loadListeningRound();
+  } else {
+    document.getElementById('iv-block').style.display='block';
+    document.getElementById('rec-area').style.display='block';
+    document.getElementById('rtitle').innerHTML=`${r.title} <span>Round</span>`;
+    loadQ();
+  }
+}
+function updateNav(){
+  for(let i=1;i<=4;i++){
+    const el=document.getElementById(`rni-${i}`);el.className='rni';
+    const st=document.getElementById(`rni-st-${i}`);
+    if(i<S.round){el.classList.add('done');st.textContent='Complete';}
+    else if(i===S.round){el.classList.add('active');st.textContent='In Progress';}
+    else{el.classList.add('locked');st.textContent='Locked';}
+  }
+}
+function updateProc(){
+  for(let i=1;i<=4;i++){
+    const icon=document.getElementById(`psi-${i}`),sub=document.getElementById(`psub-${i}`);
+    if(i<S.round){icon.className='psi done';icon.textContent='✅';sub.textContent='Complete';sub.className='ps-sub done';}
+    else if(i===S.round){icon.className='psi active';sub.textContent='In progress...';sub.className='ps-sub';}
+    else{icon.className='psi';sub.textContent=`Awaiting Round ${i-1}`;sub.className='ps-sub';}
+  }
+  document.getElementById('psm-fill').style.width=Math.round((S.qAnswered/S.totalQ)*100)+'%';
+}
+
+// ══════════════════════════════════════
+// QUESTION FLOW
+// ══════════════════════════════════════
+async function loadQ(){
+  const q=S.qIdx;
+  document.getElementById('qcur').textContent=q+1;
+  document.getElementById('pfill').style.width=(q/ROUNDS[S.round].qs.length*100)+'%';
+  const qtEl=document.getElementById('qtext');
+  qtEl.className='qtext loading';qtEl.innerHTML='<span class="qdots"><span>•</span><span>•</span><span>•</span></span>';
+  resetRecArea();setCandState('listening');
+  await speak(ROUNDS[S.round].qs[q]);
+  qtEl.className='qtext';qtEl.textContent=ROUNDS[S.round].qs[q];
+  setCandState('waiting');
+}
+
+// ══════════════════════════════════════
+// AVATARS
+// ══════════════════════════════════════
+let candMT=null;
+function setCandState(state){
+  const wrap=document.getElementById('cav-wrap'),badge=document.getElementById('cstate'),txt=document.getElementById('cstate-txt');
+  wrap.className='cav-wrap';badge.className='cstate';
+  if(candMT){clearInterval(candMT);candMT=null;}
+  const m=document.getElementById('cand-mouth');
+  if(state==='recording'){wrap.classList.add('recording');badge.classList.add('recording');txt.textContent='Speaking';
+    const sh=['M33,42 Q40,50 47,42','M34,44 Q40,48 46,44','M33,42 Q40,47 47,42','M34,45 Q40,51 46,45'];
+    let i=0;candMT=setInterval(()=>{if(m)m.setAttribute('d',sh[i++%sh.length]);},150);}
+  else if(state==='listening'){wrap.classList.add('listening');badge.classList.add('listening');txt.textContent='Listening';if(m)m.setAttribute('d','M33,42 Q40,47 47,42');}
+  else{txt.textContent='Waiting';if(m)m.setAttribute('d','M33,42 Q40,47 47,42');}
+}
+let avMT=null;
+function setIvSpeak(on){
+  const block=document.getElementById('iv-block'),idle=document.getElementById('av-idle'),spk=document.getElementById('av-speak'),st=document.getElementById('av-st');
+  if(avMT){clearInterval(avMT);avMT=null;}
+  if(on){
+    block.classList.add('speaking');if(idle)idle.setAttribute('opacity','0');if(spk)spk.setAttribute('opacity','1');if(st)st.textContent='Speaking';
+    const sz=[[9,4.5],[12,6.5],[8,3.5],[11,5.5],[7.5,4.5]];let i=0;
+    avMT=setInterval(()=>{if(!spk)return;const[rx,ry]=sz[i++%sz.length];spk.setAttribute('rx',rx);spk.setAttribute('ry',ry);},100);
+  } else {
+    block.classList.remove('speaking');if(idle)idle.setAttribute('opacity','1');if(spk)spk.setAttribute('opacity','0');if(st)st.textContent='Ready';
+  }
+}
+
+// ══════════════════════════════════════
+// TTS — NATURAL
+// ══════════════════════════════════════
+function humanise(text){
+  if(/read|passage|aloud|clearly/i.test(text))return text;
+  const s=['Alright, so — ','Great. So — ','Okay — ','Good. ','Right, so — ','Perfect. '][Math.floor(Math.random()*6)];
+  return s+text.replace(/\bI am\b/g,"I'm").replace(/\bDescribe\b/gi,"Can you describe").replace(/\bExplain\b/gi,"Help me understand").replace(/\bPlease\b/g,'').trim();
+}
+async function speak(text){
+  setIvSpeak(true);
+  const ht=humanise(text);
+  if(CFG.elKey&&CFG.elVid){
+    try{
+      const res=await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${CFG.elVid}`,{
+        method:'POST',headers:{'xi-api-key':CFG.elKey,'Content-Type':'application/json'},
+        body:JSON.stringify({text:ht,model_id:'eleven_turbo_v2',voice_settings:{stability:.45,similarity_boost:.75,style:.3,use_speaker_boost:true}})
+      });
+      if(res.ok){const blob=await res.blob();await playBlob(blob);setIvSpeak(false);return;}
+    }catch(e){}
+  }
+  return new Promise(resolve=>{
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(ht);
+    u.rate=0.82;u.pitch=0.95;u.volume=0.95;
+    const voices=window.speechSynthesis.getVoices();
+    const pref=['Google UK English Male','Microsoft Ryan','Daniel','Alex','Google US English'].reduce((f,n)=>f||voices.find(v=>v.name.includes(n)),null);
+    if(pref)u.voice=pref;
+    u.text=ht.replace(/\. /g,'.  ').replace(/\? /g,'?  ').replace(/— /g,',  ');
+    u.onend=()=>{setIvSpeak(false);resolve();};u.onerror=()=>{setIvSpeak(false);resolve();};
+    setTimeout(()=>window.speechSynthesis.speak(u),300);
+    setTimeout(()=>{setIvSpeak(false);resolve();},ht.length*90+3000);
+  });
+}
+function playBlob(blob){return new Promise(resolve=>{const url=URL.createObjectURL(blob);const a=new Audio(url);a.onended=()=>{URL.revokeObjectURL(url);resolve();};a.play().catch(()=>resolve());});}
+
+// ══════════════════════════════════════
+// RECORDING (Rounds 1 & 2)
+// ══════════════════════════════════════
+function resetRecArea(){
+  S.transcript='';S.isRec=false;
+  document.getElementById('tx-box').innerHTML='<span class="tx-ph">Your speech will appear here in real time...</span>';
+  document.getElementById('btn-sub').disabled=true;
+  document.getElementById('btn-mic').classList.remove('on');
+  document.getElementById('rs-m').textContent='Ready to record';document.getElementById('rs-s').textContent='Click the mic to start';
+  document.getElementById('wv-idle').style.display='flex';
+}
+async function toggleRec(){if(S.isRec)stopMic();else await startMic();}
+async function startMic(){
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    S.isRec=true;S.transcript='';
+    document.getElementById('btn-mic').classList.add('on');
+    document.getElementById('rs-m').textContent='● Recording...';document.getElementById('rs-s').textContent='Speak clearly · click to stop';
+    document.getElementById('wv-idle').style.display='none';
+    document.getElementById('tx-box').innerHTML='<span style="color:var(--gray);font-style:italic">Listening...</span>';
+    setCandState('recording');startWave(stream);
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(SR){
+      S.recognition=new SR();S.recognition.continuous=true;S.recognition.interimResults=true;S.recognition.lang='en-US';
+      S.recognition.onresult=e=>{
+        let interim='',final='';
+        for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)final+=e.results[i][0].transcript+' ';else interim+=e.results[i][0].transcript;}
+        if(final)S.transcript+=final;
+        const box=document.getElementById('tx-box');box.className='tx-box';
+        box.textContent=(S.transcript+interim)||'...';
+        if(S.transcript.trim())document.getElementById('btn-sub').disabled=false;
+      };
+      S.recognition.start();
+    }
+  }catch(e){toast('⚠️ Microphone denied','err');}
+}
+function stopMic(){
+  S.isRec=false;document.getElementById('btn-mic').classList.remove('on');
+  document.getElementById('rs-m').textContent='Recording complete';
+  document.getElementById('rs-s').textContent=S.transcript.trim()?'Click Submit to continue':'No speech — try again';
+  setCandState('waiting');
+  if(S.recognition){S.recognition.stop();S.recognition=null;}
+  if(S.animFrame){cancelAnimationFrame(S.animFrame);S.animFrame=null;}
+  document.getElementById('wv-idle').style.display='none';
+}
+function startWave(stream){
+  const ctx=new(window.AudioContext||window.webkitAudioContext)();
+  const src=ctx.createMediaStreamSource(stream);const an=ctx.createAnalyser();an.fftSize=256;src.connect(an);
+  const canvas=document.getElementById('waveform'),c=canvas.getContext('2d');
+  const bufLen=an.frequencyBinCount,data=new Uint8Array(bufLen);
+  function draw(){S.animFrame=requestAnimationFrame(draw);an.getByteFrequencyData(data);canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight;c.clearRect(0,0,canvas.width,canvas.height);const bw=(canvas.width/bufLen)*2.2;let x=0;for(let i=0;i<bufLen;i++){const h=(data[i]/255)*canvas.height*.8;c.fillStyle=`rgba(201,168,76,${.3+(data[i]/255)*.7})`;c.fillRect(x,canvas.height-h,bw-1,h);x+=bw;}}
+  draw();
+}
+
+// ══════════════════════════════════════
+// SUBMIT (Rounds 1 & 2)
+// ══════════════════════════════════════
+async function submitAns(){
+  if(!S.transcript.trim()){toast('⚠️ No speech captured','err');return;}
+  document.getElementById('btn-sub').disabled=true;
+  showEval(true,'Processing response...','Please wait');
+  const sc=await evalResponse(ROUNDS[S.round].qs[S.qIdx],S.transcript,S.round);
+  S.scores[S.round].push(sc);S.feedback.push({q:S.qIdx,round:S.round,...sc});
+  S.qAnswered++;updateProc();showEval(false);
+  S.qIdx++;
+  if(S.qIdx>=ROUNDS[S.round].qs.length){
+    const avg=S.scores[S.round].reduce((s,x)=>s+x.overall,0)/S.scores[S.round].length;
+    S.avgs[S.round]=avg;showGate(avg);
+  } else loadQ();
+}
+
+// ══════════════════════════════════════
+// LISTENING & COMPREHENSION (Round 3)
+// ══════════════════════════════════════
+let lsAudioCtx=null, lsAudioSource=null, lsAudioBuffer=null, lsPlaying=false, lsPlayCount=0, lsStartTime=0, lsDuration=60;
+
+function loadListeningRound(){
+  S.lsAnswers={};S.lsVoiceAnswers={};lsPlaying=false;lsPlayCount=0;
+  document.getElementById('ls-mcq').style.display='none';
+  document.getElementById('ls-play-btn').className='ls-play-btn';
+  document.getElementById('ls-play-ic').textContent='▶';
+  document.getElementById('ls-play-label').textContent='Play Conversation';
+  document.getElementById('ls-prog-fill').style.width='0%';
+  document.getElementById('ls-time-cur').textContent='0:00';
+  document.getElementById('ls-listen-badge').textContent='Listen carefully';
+  buildMCQ();
+  toast('🎧 Click Play to hear the audio scenario','');
+}
+
+function buildMCQ(){
+  const c=document.getElementById('ls-questions-container');
+  c.innerHTML='';
+  LS_SCENARIO.questions.forEach((q,qi)=>{
+    const div=document.createElement('div');div.className='ls-q';
+    div.innerHTML=`<div class="ls-q-num">Question ${qi+1} of ${LS_SCENARIO.questions.length}</div>
+      <div class="ls-q-text">${q.q}</div>
+      <div class="ls-opts" id="ls-opts-${qi}">
+        ${q.opts.map((o,oi)=>`<div class="ls-opt" id="ls-opt-${qi}-${oi}" onclick="selectOpt(${qi},${oi})"><div class="ls-opt-key">${String.fromCharCode(65+oi)}</div>${o}</div>`).join('')}
+      </div>
+      <div class="ls-voice-answer" id="ls-va-${qi}">🎙️ <span id="ls-va-txt-${qi}">Verbal answer not captured</span></div>`;
+    c.appendChild(div);
+  });
+}
+
+function selectOpt(qi,oi){
+  const prev=S.lsAnswers[qi];
+  if(prev!==undefined)document.getElementById(`ls-opt-${qi}-${prev}`).classList.remove('selected');
+  S.lsAnswers[qi]=oi;
+  document.getElementById(`ls-opt-${qi}-${oi}`).classList.add('selected');
+  checkAllAnswered();
+}
+
+function checkAllAnswered(){
+  const all=LS_SCENARIO.questions.every((_,i)=>S.lsAnswers[i]!==undefined);
+  document.getElementById('btn-ls-submit').disabled=!all;
+}
+
+async function toggleAudio(){
+  if(lsPlaying){
+    // Pause — just stop synth
+    window.speechSynthesis.cancel();lsPlaying=false;
+    document.getElementById('ls-play-btn').className='ls-play-btn';
+    document.getElementById('ls-play-ic').textContent='▶';
+    document.getElementById('ls-play-label').textContent='Resume Conversation';
+    return;
+  }
+  if(lsPlayCount>=2){toast('⚠️ You may only replay the audio once.','wn');return;}
+  lsPlayCount++;
+  lsPlaying=true;
+  const btn=document.getElementById('ls-play-btn');
+  btn.className='ls-play-btn playing';
+  document.getElementById('ls-play-ic').textContent='⏸';
+  document.getElementById('ls-play-label').textContent='Playing...';
+  document.getElementById('ls-listen-badge').textContent=lsPlayCount===2?'Final play':'Listen carefully';
+  // Speak scenario using TTS with different voices for agent/customer
+  const lines=LS_SCENARIO.script.split('\n').filter(l=>l.trim());
+  const voices=window.speechSynthesis.getVoices();
+  const agentVoice=voices.find(v=>v.name.includes('Google US English')||v.name.includes('Alex')||v.name.includes('Microsoft David'))||voices[0];
+  const custVoice=voices.find(v=>v.name.includes('Google UK English Female')||v.name.includes('Samantha')||v.name.includes('Microsoft Zira'))||voices[1]||voices[0];
+  const totalLines=lines.length;
+  let lineIdx=0;
+  const progFill=document.getElementById('ls-prog-fill');
+  const timeCur=document.getElementById('ls-time-cur');
+  const estTotal=lsDuration;
+  const playLine=()=>{
+    if(lineIdx>=totalLines||!lsPlaying){
+      lsPlaying=false;
+      document.getElementById('ls-play-btn').className='ls-play-btn';
+      document.getElementById('ls-play-ic').textContent=lsPlayCount>=2?'🔒':'🔁';
+      document.getElementById('ls-play-label').textContent=lsPlayCount>=2?'Audio complete — answer below':'Replay (once more allowed)';
+      progFill.style.width='100%';
+      timeCur.textContent='1:00';
+      document.getElementById('ls-mcq').style.display='block';
+      document.getElementById('pfill').style.width='50%';
+      return;
+    }
+    const line=lines[lineIdx];
+    const isAgent=line.startsWith('Agent:');
+    const text=line.replace(/^(Agent:|Customer:)\s*/,'');
+    const u=new SpeechSynthesisUtterance(text);
+    u.voice=isAgent?agentVoice:custVoice;
+    u.rate=isAgent?0.85:0.88;
+    u.pitch=isAgent?0.92:1.1;
+    u.onend=()=>{lineIdx++;const pct=Math.round(lineIdx/totalLines*100);progFill.style.width=pct+'%';const secs=Math.round(pct/100*estTotal);timeCur.textContent=`${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}`;setTimeout(playLine,180);};
+    u.onerror=()=>{lineIdx++;setTimeout(playLine,100);};
+    window.speechSynthesis.speak(u);
+  };
+  window.speechSynthesis.cancel();
+  await new Promise(r=>setTimeout(r,200));
+  playLine();
+}
+
+async function submitListening(){
+  document.getElementById('btn-ls-submit').disabled=true;
+  showEval(true,'Evaluating comprehension...','AI is analysing your answers');
+  const sc=await evalListening(S.lsAnswers,S.lsVoiceAnswers,LS_SCENARIO);
+  showEval(false);
+  S.scores[3].push(sc);S.feedback.push({q:0,round:3,...sc});
+  S.qAnswered+=4;updateProc();
+  const avg=sc.overall;S.avgs[3]=avg;
+  document.getElementById('pfill').style.width='100%';
+  showGate(avg);
+}
+
+// ══════════════════════════════════════
+// MOCK CALL — ElevenLabs ConvAI
+// ══════════════════════════════════════
+function initConvAI(){
+  const widget=document.querySelector('elevenlabs-convai');if(!widget)return;
+  widget.addEventListener('elevenlabs-convai:call-started',()=>{S.callActive=true;document.getElementById('btn-endcall').disabled=false;});
+  widget.addEventListener('elevenlabs-convai:call-ended',()=>{if(S.callActive)endCall();});
+  widget.addEventListener('elevenlabs-convai:message',e=>{
+    const msg=e.detail||{};
+    if(msg.source==='ai'&&msg.message)appendCallLine('agent',msg.message);
+    else if(msg.source==='user'&&msg.message)appendCallLine('cand',msg.message);
+  });
+  window.addEventListener('message',e=>{
+    try{const d=typeof e.data==='string'?JSON.parse(e.data):e.data;if(d&&d.type==='elevenlabs-transcript'){if(d.role==='agent')appendCallLine('agent',d.text);else if(d.role==='user')appendCallLine('cand',d.text);}}catch(err){}
+  });
+}
+function loadMCScenario(idx){
+  const sc=MC_SCENARIOS[idx];if(!sc)return;
+  document.getElementById('mc-scenario').innerHTML=sc.brief;
+  document.getElementById('call-persona').textContent=sc.persona;
+  document.getElementById('mc-num').textContent=idx+1;
+  document.getElementById('mc-of').textContent=MC_SCENARIOS.length;
+  document.getElementById('mc-total').textContent=MC_SCENARIOS.length;
+  document.getElementById('qcur').textContent=idx+1;
+  document.getElementById('qtot').textContent=MC_SCENARIOS.length;
+  document.getElementById('pfill').style.width=(idx/MC_SCENARIOS.length*100)+'%';
+  S.callLines=[];
+  document.getElementById('call-tx').innerHTML='<span class="call-tx-ph">Conversation will appear here...</span>';
+  document.getElementById('mc-brief').style.display='block';
+  document.getElementById('call-active').classList.remove('show');
+  document.getElementById('btn-call').disabled=false;
+  setCandState('waiting');
+}
+function appendCallLine(role,text){
+  if(!text||!text.trim())return;
+  S.callLines.push({role,text:text.trim()});
+  const c=document.getElementById('call-tx');
+  const ph=c.querySelector('.call-tx-ph');if(ph)ph.remove();
+  const d=document.createElement('div');d.className=role==='agent'?'ct-agent':'ct-cand';d.textContent=text.trim();
+  c.appendChild(d);c.scrollTop=c.scrollHeight;
+  setCandState(role==='cand'?'recording':'listening');
+}
+async function startCall(){
+  document.getElementById('mc-brief').style.display='none';
+  document.getElementById('call-active').classList.add('show');
+  document.getElementById('btn-endcall').disabled=true;
+  S.callActive=false;S.callStart=Date.now();
+  S.callTimer=setInterval(()=>{
+    const e=Math.floor((Date.now()-S.callStart)/1000);
+    const el=document.getElementById('call-timer');
+    if(el)el.textContent=`${String(Math.floor(e/60)).padStart(2,'0')}:${String(e%60).padStart(2,'0')}`;
+  },1000);
+  setCandState('listening');
+  logCheat('ok',`Mock Call ${S.callScenario+1} started`);
+  // Enable end call after 5s fallback
+  setTimeout(()=>{S.callActive=true;document.getElementById('btn-endcall').disabled=false;},5000);
+}
+async function endCall(){
+  if(!S.callActive&&Date.now()-(S.callStart||0)<3000)return;
+  S.callActive=false;clearInterval(S.callTimer);
+  const transcript=S.callLines.map(l=>`${l.role==='cand'?'Agent (Candidate)':'Customer'}: ${l.text}`).join('\n');
+  const candOnly=S.callLines.filter(l=>l.role==='cand').map(l=>l.text).join(' ');
+  showEval(true,'Evaluating call performance...','AI is analysing the conversation');
+  const sc=await evalCall(MC_SCENARIOS[S.callScenario].persona,transcript||candOnly||'No transcript captured.');
+  showEval(false);
+  S.scores[4].push(sc);S.feedback.push({q:S.callScenario,round:4,...sc});
+  S.qAnswered++;updateProc();
+  logCheat('ok',`Mock Call ${S.callScenario+1} completed`);
+  S.callScenario++;setCandState('waiting');
+  if(S.callScenario>=MC_SCENARIOS.length){
+    const avg=S.scores[4].reduce((s,x)=>s+x.overall,0)/S.scores[4].length;
+    S.avgs[4]=avg;document.getElementById('pfill').style.width='100%';showGate(avg);
+  } else loadMCScenario(S.callScenario);
+}
+
+// ══════════════════════════════════════
+// AI EVALUATION
+// ══════════════════════════════════════
+async function evalResponse(q,transcript,round){
+  let prompt='';
+  if(round===1){
+    prompt=`You are an expert voice assessor for Midland Credit Management evaluating a Controlled Reading Assessment.
+PASSAGE READ ALOUD: "${q}"
+CANDIDATE TRANSCRIPT: "${transcript}"
+
+Evaluate on 0–100 for each dimension:
+- pronunciation: U.S. accent accuracy, name/state/term pronunciation, phonetic clarity
+- fluency: smooth uninterrupted delivery, natural pacing, no halting
+- content: fidelity to the passage, completeness, no skipped words (weight this strongly)
+- confidence: voice quality, phone-call readiness, projection
+
+Also assess:
+- speech_rate: "too fast" | "appropriate" | "too slow"
+- mti_influence: "none" | "mild" | "moderate" | "strong" (Mother Tongue Influence on tone/intonation)
+
+overall: weighted avg (pronunciation 35%, fluency 30%, content 25%, confidence 10%)
+feedback: 2 sentence specific feedback on reading quality, accent, MTI or rate issues
+feedbackType: "good">=75 "warn"50-74 "bad"<50
+
+Return ONLY valid JSON: {"pronunciation":0,"fluency":0,"content":0,"confidence":0,"overall":0,"speech_rate":"appropriate","mti_influence":"none","feedback":"","feedbackType":"good"}`;
+  } else if(round===2){
+    prompt=`You are an expert voice and communication assessor for Midland Credit Management evaluating a Spontaneous Speech / Elocution round.
+PROMPT GIVEN: "${q}"
+CANDIDATE RESPONSE: "${transcript}"
+
+Evaluate on 0–100:
+- pronunciation: clarity and naturalness in unscripted speech
+- fluency: smooth grammar in unscripted speech, sentence structure, articulation
+- content: spontaneity, relevance, coherence, communication clarity
+- confidence: assertiveness, engagement, absence of excessive fillers
+
+Count filler words (um, uh, like, you know, basically, sort of, kind of) and long pauses.
+filler_count: number of filler instances detected
+spontaneity_score: 0–100 (how natural and unscripted the response sounds)
+
+overall: weighted avg (pronunciation 20%, fluency 25%, content 35%, confidence 20%)
+feedback: 2 sentences on grammar, filler patterns, clarity, or spontaneity
+feedbackType: "good">=75 "warn"50-74 "bad"<50
+
+Return ONLY valid JSON: {"pronunciation":0,"fluency":0,"content":0,"confidence":0,"overall":0,"filler_count":0,"spontaneity_score":0,"feedback":"","feedbackType":"good"}`;
+  }
+  return callAI(prompt);
+}
+
+async function evalListening(answers, voiceAnswers, scenario){
+  const qs = scenario.questions;
+  const answerSummary = qs.map((q,i)=>{
+    const sel = answers[i] !== undefined ? q.opts[answers[i]] : 'Not answered';
+    const correct = q.opts[q.correct];
+    const voice = voiceAnswers[i]||'';
+    return `Q${i+1}: "${q.q}" | Selected: "${sel}" | Correct: "${correct}" | Voice answer: "${voice}"`;
+  }).join('\n');
+
+  const correctCount = qs.filter((q,i)=>answers[i]===q.correct).length;
+
+  const prompt=`You are an expert listening comprehension assessor for Midland Credit Management.
+A candidate listened to a 60-second U.S. customer service call scenario with emotional shifts and key details.
+They then answered ${qs.length} multiple-choice comprehension questions (verbally and/or by selection).
+
+RESULTS:
+${answerSummary}
+Correct answers: ${correctCount} out of ${qs.length}
+
+Score the candidate 0–100 on:
+- pronunciation: quality and clarity of any verbal answers recorded
+- fluency: how articulate and natural the verbal reasoning was
+- content: comprehension accuracy, detail retention, correct identification of facts (weight heavily — ${correctCount}/${qs.length} correct)
+- confidence: certainty, minimal acknowledgment patterns (not overusing "yes", "I see", "okay")
+
+Also assess:
+- comprehension_score: 0–100 based on accuracy (${correctCount}/${qs.length} correct maps roughly to ${Math.round(correctCount/qs.length*100)}%)
+- emotional_detection: "strong" | "moderate" | "weak" — based on whether they identified the emotional shift
+- active_listening: "strong" | "moderate" | "weak" — based on detail retention
+- reasoning: "strong" | "moderate" | "weak" — based on inference quality
+
+overall: weighted avg (pronunciation 10%, fluency 10%, content 60%, confidence 20%)
+feedback: 2–3 sentences on comprehension accuracy, detail retention, and listening quality
+feedbackType: "good">=75 "warn"50-74 "bad"<50
+
+Return ONLY valid JSON: {"pronunciation":0,"fluency":0,"content":0,"confidence":0,"overall":0,"comprehension_score":0,"emotional_detection":"moderate","active_listening":"moderate","reasoning":"moderate","feedback":"","feedbackType":"good"}`;
+  return callAI(prompt);
+}
+async function evalCall(persona,transcript){
+  const prompt=`You are an expert HR evaluator for Midland Credit Management evaluating a Mock Call Role Play (Round 4).
+Evaluate this debt collections and customer service call simulation on core competencies.
+SCENARIO: ${persona}
+TRANSCRIPT:
+${transcript}
+
+Score the candidate (labelled "Agent (Candidate)") on 0–100:
+- pronunciation: speech clarity and U.S. accent naturalness on the phone
+- fluency: professional pacing, natural sentence flow, no excessive fillers
+- content: collections knowledge, empathy, resolution attempt, professional language (weight heavily)
+- confidence: assertiveness, call control, composure under pressure
+
+Also assess behavioral competencies on scale "strong" | "moderate" | "weak":
+- influence_persuasion: ability to guide the customer toward a decision
+- negotiation: flexibility and structure of offers/counter-offers
+- objection_handling: how effectively objections were addressed
+- resilience_composure: remained calm and professional throughout
+- perseverance: continued pursuing resolution despite resistance
+- emotional_control: regulated tone during tense moments
+- relationship_building: empathy, rapport, trust-building language
+
+overall: weighted avg (pronunciation 15%, fluency 15%, content 50%, confidence 20%)
+feedback: 2–3 sentence specific behavioral feedback referencing the call handling
+feedbackType: "good">=75 "warn"50-74 "bad"<50
+
+Return ONLY valid JSON: {"pronunciation":0,"fluency":0,"content":0,"confidence":0,"overall":0,"influence_persuasion":"moderate","negotiation":"moderate","objection_handling":"moderate","resilience_composure":"moderate","perseverance":"moderate","emotional_control":"moderate","relationship_building":"moderate","feedback":"","feedbackType":"good"}`;
+  return callAI(prompt);
+}
+async function callAI(prompt){
+  if(CFG.azKey&&CFG.azEp){
+    try{
+      const res=await fetch(`${CFG.azEp}/openai/deployments/${CFG.azDep}/chat/completions?api-version=2024-02-01`,{
+        method:'POST',headers:{'api-key':CFG.azKey,'Content-Type':'application/json'},
+        body:JSON.stringify({messages:[{role:'user',content:prompt}],max_tokens:350,temperature:.3})
+      });
+      if(res.ok){const d=await res.json();return JSON.parse(d.choices[0].message.content.trim().replace(/```json|```/g,'').trim());}
+    }catch(e){}
+  }
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,system:'Expert HR evaluator. Respond with valid JSON only, no markdown.',messages:[{role:'user',content:prompt}]})
+    });
+    if(res.ok){const d=await res.json();const t=d.content.map(b=>b.type==='text'?b.text:'').join('');return JSON.parse(t.trim().replace(/```json|```/g,'').trim());}
+  }catch(e){console.error('AI eval:',e);}
+  return heuristic(prompt.includes('TRANSCRIPT')?S.callLines.filter(l=>l.role==='cand').map(l=>l.text).join(' '):'');
+}
+function heuristic(tx){
+  const words=tx.trim().split(/\s+/).filter(Boolean);const len=words.length;
+  const pro=/account|payment|service|resolve|understand|customer|help|professional|arrangement/i.test(tx);
+  const fill=(tx.match(/\b(um|uh|like|you know|basically)\b/gi)||[]).length;
+  const bc=Math.min(88,38+(len>30?30:len)+(pro?16:0));const bf=Math.max(42,82-(fill*8));
+  const bp=68+Math.floor(Math.random()*22);const bco=Math.min(84,48+(len>50?26:len/2));
+  const ov=Math.round(bp*.2+bf*.2+bc*.4+bco*.2);const type=ov>=75?'good':ov>=50?'warn':'bad';
+  const fb={good:["Strong professional response.","Well-structured, confident answer."],warn:["Expand with more examples.","Add more professional terminology."],bad:["Too brief or unclear.","Needs more professional language."]};
+  return{pronunciation:bp,fluency:bf,content:bc,confidence:bco,overall:ov,feedback:fb[type][Math.floor(Math.random()*2)],feedbackType:type};
+}
+
+// ══════════════════════════════════════
+// GATE — neutral transition, no scores shown, no retry
+// ══════════════════════════════════════
+function showGate(avg){
+  // Store avg for final report but never block candidate progress
+  document.getElementById('gate-icon').textContent='✅';
+  document.getElementById('gate-title').textContent='Round Complete';
+  document.getElementById('gate-msg').textContent='Your responses have been recorded. Continue to the next round.';
+  const nb=document.getElementById('btn-next'),rb=document.getElementById('btn-retry');
+  rb.style.display='none';
+  nb.textContent=S.round===4?'Submit Assessment →':`Continue to Round ${S.round+1} →`;
+  nb.onclick=S.round===4?finalSubmit:gateNext;
+  document.getElementById('gate-overlay').classList.add('open');
+}
+function gateNext(){document.getElementById('gate-overlay').classList.remove('open');loadRound(S.round+1);}
+function gateRetry(){document.getElementById('gate-overlay').classList.remove('open');loadRound(S.round);}
+
+// ══════════════════════════════════════
+// FINAL SUBMIT
+// ══════════════════════════════════════
+async function finalSubmit(){
+  document.getElementById('gate-overlay').classList.remove('open');
+  showEval(true,'Submitting assessment...','Saving results securely');
+  stopRec();if(S.faceTimer){clearInterval(S.faceTimer);S.faceTimer=null;}
+  const all=Object.values(S.scores).flat();
+  const avg=k=>all.length?all.reduce((s,x)=>s+(x[k]||0),0)/all.length:0;
+  const p=Math.round(avg('pronunciation')),f=Math.round(avg('fluency')),
+    cont=Math.round(avg('content')),conf=Math.round(avg('confidence')),ov=Math.round(avg('overall'));
+  const passed=[1,2,3,4].every(r=>!S.avgs[r]||S.avgs[r]>=ROUNDS[r].thresh);
+  const bad=S.cheatEvents.filter(e=>e.type==='bad').length;
+  const integrity=bad===0&&S.tabSwitches===0&&S.copyAttempts===0?'Clean':bad>=3?'Compromised':'Review';
+  const summary=await genSummary(ov,passed,p,f,cont,conf);
+  const record={
+    sessionId:S.sessionId,name:`${S.cand.first} ${S.cand.last}`,email:S.cand.email,role:S.cand.role,
+    date:new Date().toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}),
+    r1:S.avgs[1]?Math.round(S.avgs[1])+'%':'N/A',r2:S.avgs[2]?Math.round(S.avgs[2])+'%':'N/A',
+    r3:S.avgs[3]?Math.round(S.avgs[3])+'%':'N/A',r4:S.avgs[4]?Math.round(S.avgs[4])+'%':'N/A',
+    overall:ov,verdict:passed?'hire':'reject',pronunciation:p,fluency:f,content:cont,confidence:conf,
+    integrity,tabSwitches:S.tabSwitches,copyAttempts:S.copyAttempts,faceOff:S.faceOff,
+    feedback:S.feedback,summary,cheatEvents:S.cheatEvents
+  };
+  saveResult(record);
+  await sendEmail(record);
+  showEval(false);
+  document.getElementById('ty-email').textContent=S.cand.email||'your email';
+  document.getElementById('ty-date').textContent=record.date;
+  document.getElementById('ty-ref').textContent=S.sessionId;
+  showScreen('thankyou');
+}
+async function genSummary(ov,hired,p,f,cont,conf){
+  const intNote=S.cheatEvents.filter(e=>e.type==='bad').length>0?`${S.cheatEvents.filter(e=>e.type==='bad').length} integrity issue(s).`:'No integrity issues.';
+  const prompt=`Write a concise 3-sentence professional HR assessment.
+Candidate: ${S.cand.first} ${S.cand.last} | Role: ${S.cand.role}
+Overall: ${ov}% | Recommendation: ${hired?'HIRE':'DO NOT HIRE'}
+Scores — Pronunciation:${p}%, Fluency:${f}%, Content:${cont}%, Confidence:${conf}%
+Integrity: ${intNote}
+Assessment covered: Controlled Reading (R1), Spontaneous Speech (R2), Listening Comprehension (R3), Mock Call Role Play (R4).
+Third person. Specific about speech quality, U.S. accent, listening comprehension, and collections aptitude. No bullets.`;
+  if(CFG.azKey&&CFG.azEp){
+    try{const res=await fetch(`${CFG.azEp}/openai/deployments/${CFG.azDep}/chat/completions?api-version=2024-02-01`,{method:'POST',headers:{'api-key':CFG.azKey,'Content-Type':'application/json'},body:JSON.stringify({messages:[{role:'user',content:prompt}],max_tokens:200})});if(res.ok){const d=await res.json();return d.choices[0].message.content.trim();}}catch(e){}
+  }
+  try{const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:250,system:'Professional HR writer. Concise factual summaries.',messages:[{role:'user',content:prompt}]})});if(res.ok){const d=await res.json();return d.content.map(b=>b.type==='text'?b.text:'').join('').trim();}}catch(e){}
+  return `${S.cand.first} ${S.cand.last} completed the MCM Voice Assessment with an overall score of ${ov}%. ${p>=70?'Pronunciation was clear and professional.':'Pronunciation requires further development.'} ${hired?'The candidate demonstrated readiness for the collections role.':'Further training and re-assessment is recommended.'}`;
+}
+
+// ══════════════════════════════════════
+// EMAIL
+// ══════════════════════════════════════
+async function sendEmail(record){
+  if(!CFG.ejsSvc||!CFG.ejsTpl||!CFG.ejsPub||!CFG.recruiterEmail){console.log('EmailJS not configured');return;}
+  try{
+    if(typeof emailjs==='undefined'){console.warn('EmailJS SDK not loaded');return;}
+    emailjs.init({publicKey:CFG.ejsPub});
+    const verdict=record.verdict==='hire'?'✅ RECOMMENDED FOR HIRE':'❌ NOT RECOMMENDED';
+    await emailjs.send(CFG.ejsSvc,CFG.ejsTpl,{
+      to_email:CFG.recruiterEmail,candidate_name:record.name,candidate_email:record.email||'N/A',
+      candidate_role:record.role,assessment_date:record.date,session_ref:record.sessionId,
+      verdict,overall_score:`${record.overall}%`,r1_score:record.r1,r2_score:record.r2,r3_score:record.r3,r4_score:record.r4||'N/A',
+      pronunciation:`${record.pronunciation}%`,fluency:`${record.fluency}%`,content:`${record.content}%`,confidence:`${record.confidence}%`,
+      integrity_status:`${record.integrity} — ${record.tabSwitches} tab switches, ${record.copyAttempts} copy attempts`,
+      ai_summary:record.summary||'N/A',
+      evaluator_notes:record.feedback.slice(0,6).map((fb,i)=>`Q${i+1} (R${fb.round}): ${fb.feedback}`).join('\n')
+    });
+    console.log('Email sent');
+  }catch(e){console.error('EmailJS error:',e);}
+}
+
+// ══════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════
+function showEval(on,t,s){
+  document.getElementById('eval-overlay').classList.toggle('open',on);
+  if(t)document.getElementById('eval-t').textContent=t;
+  if(s)document.getElementById('eval-s').textContent=s;
+}
+function toast(msg,type=''){
+  const el=document.getElementById('toast');el.textContent=msg;el.className=`toast show ${type}`;
+  setTimeout(()=>el.classList.remove('show'),3500);
+}
+window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
+
+// ══════════════════════════════════════
+// INIT — always show setup screen first
+// ══════════════════════════════════════
+document.addEventListener('DOMContentLoaded',()=>{
+  showScreen('setup');
+  document.getElementById('btn-copilot').classList.toggle('on',!!(CFG.azKey&&CFG.azEp));
+  document.getElementById('btn-eleven').classList.toggle('on',!!CFG.elKey);
+});
+</script>
+</body>
+</html>
